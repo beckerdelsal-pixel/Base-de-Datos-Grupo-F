@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Perfil - Crowdfunding</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <div id="loader-wrapper"><div class="loader"></div><p>Preparando tu perfil...</p></div>
+    <nav class="menu">
+        <div class="menu_contenedor">
+            <div class="menu_opciones">
+                <a href="index.html" class="boton-enlace btn-cargar">INICIO</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="login.html" class="boton-enlace btn-cargar">INICIAR SESIÓN</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="proyectos.html" class="boton-enlace btn-cargar">REGISTRARSE</a>
+            </div>
+            <div class="menu_opciones">
+                <div class="boton_buscar">BUSCAR</div>
+            </div>
+        </div>
+    </nav>
+    <div class="contenedor-formulario">
+        <form class="tarjeta-form">
+            <h2>¡Bienvenido!</h2>
+            <p>Antes de empezar, cuéntanos quién eres:</p>
+            
+            <div class="selector-rol">
+                <label class="opcion-rol">
+                    <input type="radio" name="tipo_usuario" value="inversionista" checked>
+                    <div class="rol-card">
+                        <span class="icono">💰</span>
+                        <span>Inversionista</span>
+                    </div>
+                </label>
+                <label class="opcion-rol">
+                    <input type="radio" name="tipo_usuario" value="emprendedor">
+                    <div class="rol-card">
+                        <span class="icono">🚀</span>
+                        <span>Emprendedor</span>
+                    </div>
+                </label>
+            </div>
+
+            <hr class="divisor">
+
+            <div class="campo">
+                <label>Nombre Completo</label>
+                <input type="text" placeholder="Tu nombre" required>
+            </div>
+            
+            <div class="campo">
+                <label>Correo Electrónico</label>
+                <input type="email" placeholder="email@ejemplo.com" required>
+            </div>
+
+            <div class="campo">
+                <label>Contraseña</label>
+                <input type="password" placeholder="Crea una contraseña" required>
+            </div>
+
+            <button type="submit" class="boton-primario btn-cargar">CREAR CUENTA</button>
+            <a href="index.html" class="enlace-retorno">Volver al inicio</a>
+        </form>
+    </div>
+
+    <script src="actividad.js"></script>
+</body>
+</html>

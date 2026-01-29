@@ -1,0 +1,242 @@
+
+:root {
+    --azul-oscuro: #1B263B;
+    --azul-medio: #415A77;
+    --verde-exito: #2D6A4F;
+    --blanco: #FFFFFF;
+    --fondo-gris: #F8F9FA;
+}
+
+body {
+    background-image: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url("fondo.jpg");
+    background-size: cover;
+    background-attachment: fixed;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Cabecera */
+.cabecera {
+    display: flex;
+    justify-content: center;
+    background-color: var(--azul-oscuro);
+    padding: 15px;
+    margin-bottom: 5px;
+}
+
+.titulos h1 {
+    font-family: 'Times New Roman', serif;
+    color: var(--blanco);
+    margin: 0;
+}
+
+/* Menú Justificado a la Derecha */
+.menu {
+    display: flex;
+    justify-content: flex-end;
+    background-color: var(--azul-medio);
+    padding: 10px 30px;
+    margin: 10px;
+    border-radius: 12px;
+    position: sticky;      /* Se queda pegado al llegar al borde */
+    top: 10px;             /* Distancia desde la parte superior (usa 0 si no quieres margen) */
+    z-index: 1000;         /* Asegura que el menú pase por encima de las tarjetas de proyectos */
+    
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.menu_contenedor {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.menu_opciones button, .boton_buscar, .boton-enlace {
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 6px;
+    border: none;
+    background-color: var(--blanco);
+    color: var(--azul-oscuro);
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.menu_opciones button:hover, .boton-enlace:hover {
+    background-color: var(--verde-exito);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Tarjetas de Proyectos */
+.contenedor-proyectos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 30px;
+    justify-content: center;
+}
+
+.tarjeta {
+    background: white;
+    width: 300px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.tarjeta-img { width: 100%; height: 180px; object-fit: cover; }
+
+.tarjeta-contenido { padding: 15px; }
+
+.progreso-contenedor {
+    background: #eee;
+    height: 10px;
+    border-radius: 5px;
+    margin: 15px 0;
+}
+
+.progreso-barra {
+    background: var(--verde-exito);
+    height: 100%;
+    border-radius: 5px;
+}
+
+.tarjeta-metas {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85em;
+    margin-bottom: 15px;
+}
+
+.boton-invertir {
+    width: 100%;
+    padding: 10px;
+    background: var(--azul-oscuro);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Loader */
+#loader-wrapper {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: var(--azul-oscuro);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+
+.loader {
+    border: 6px solid rgba(255,255,255,0.1);
+    border-top: 6px solid var(--verde-exito);
+    border-radius: 50%;
+    width: 50px; height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+.loader-hidden { opacity: 0 !important; visibility: hidden !important; }
+
+/*roles de registro*/
+/* --- Selector de Roles Visual --- */
+.selector-rol {
+    display: flex;
+    gap: 15px;
+    margin: 20px 0;
+    justify-content: center;
+}
+
+.opcion-rol {
+    cursor: pointer;
+    flex: 1;
+}
+
+/* Ocultar el radio button original */
+.opcion-rol input {
+    display: none;
+}
+
+/* Diseño de la tarjeta de rol */
+.rol-card {
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.3s ease;
+    background-color: #f9f9f9;
+}
+
+.rol-card .icono {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.rol-card span {
+    font-weight: bold;
+    color: var(--azul-medio);
+}
+
+/* Efecto cuando está seleccionado */
+.opcion-rol input:checked + .rol-card {
+    border-color: var(--verde-exito);
+    background-color: rgba(45, 106, 79, 0.1);
+    transform: scale(1.05);
+}
+
+.opcion-rol input:checked + .rol-card span {
+    color: var(--verde-exito);
+}
+
+.divisor {
+    border: 0;
+    border-top: 1px solid #eee;
+    margin: 20px 0;
+}
+
+.campo {
+    text-align: left;
+    margin-bottom: 25px; /* Espacio generoso entre campos */
+}
+
+/* 2. Aplicamos el espacio interno (padding) a los cuadros de texto */
+.campo input, 
+.campo select {
+    width: 100%;
+    max-width: 500px;
+    padding: 12px 14px; /* Aumentamos el primer número para que la caja sea más alta */
+    
+    border: 1px solid #ced4da; /* Un gris suave para el borde */
+    border-radius: 10px;        /* Bordes redondeados modernos */
+    box-sizing: border-box;     /* Evita que la caja se estire fuera del diseño */
+    
+    font-size: 1rem;            /* Texto un poco más grande y legible */
+    background-color: #ffffff;
+    transition: all 0.3s ease;  /* Para que el cambio al hacer clic sea suave */
+}
+
+/* 3. Efecto visual cuando el usuario hace clic (Focus) */
+.campo input:focus {
+    outline: none;
+    border-color: var(--verde-exito); /* Cambia al verde que definimos */
+    box-shadow: 0 0 10px rgba(45, 106, 79, 0.15); /* Sombra suave verde */
+    background-color: #fdfdfd;
+}
+
+/* 4. Ajuste para las etiquetas (labels) */
+.campo label {
+    display: block;
+    margin-bottom: 10px; /* Espacio entre el texto de la etiqueta y la caja */
+    font-weight: 600;
+    color: var(--azul-oscuro);
+    font-size: 0.95rem;
+}

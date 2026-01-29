@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - CrowdFunding</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+    <div id="loader-wrapper">
+        <div class="loader"></div>
+        <p>Validando credenciales...</p>
+    </div>
+
+    <nav class="menu">
+        <div class="menu_contenedor">
+            <div class="menu_opciones">
+                <a href="index.html" class="boton-enlace btn-cargar">INICIO</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="login.html" class="boton-enlace btn-cargar">INICIAR SESIÓN</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="proyectos.html" class="boton-enlace btn-cargar">REGISTRARSE</a>
+            </div>
+            <div class="menu_opciones">
+                <div class="boton_buscar">BUSCAR</div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="contenedor-formulario">
+        <form class="tarjeta-form">
+            <div class="login-header">
+                <h2>Bienvenido de nuevo</h2>
+                <p>Ingresa a tu cuenta de inversionista o emprendedor</p>
+            </div>
+
+            <div class="campo">
+                <label>Correo Electrónico</label>
+                <input type="email" placeholder="ejemplo@correo.com" required>
+            </div>
+
+            <div class="campo">
+                <label>Contraseña</label>
+                <input type="password" placeholder="Tu contraseña" required>
+                <a href="#" class="link-olvido">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <button type="submit" class="boton-primario btn-cargar">ENTRAR</button>
+
+            <div class="form-footer">
+                <p>¿Aún no tienes cuenta? <a href="proyectos.html" class="btn-cargar">Crea una aquí</a></p>
+            </div>
+        </form>
+    </main>
+
+    <script src="actividad.js"></script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de CrowdFunding</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+
+    <div id="loader-wrapper">
+        <div class="loader"></div>
+        <p>Cargando plataforma...</p>
+    </div>
+
+    <header class="cabecera">
+        <div class="titulos">
+            <h1>PÁGINA PRINCIPAL</h1>
+        </div>
+    </header>
+
+    <nav class="menu">
+        <div class="menu_contenedor">
+            <div class="menu_opciones">
+                <a href="index.html" class="boton-enlace btn-cargar">INICIO</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="login.html" class="boton-enlace btn-cargar">INICIAR SESIÓN</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="proyectos.html" class="boton-enlace btn-cargar">REGISTRARSE</a>
+            </div>
+            <div class="menu_opciones">
+                <div class="boton_buscar">BUSCAR</div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="contenedor-proyectos">
+        <div class="tarjeta">
+            <img src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=300" alt="Proyecto" class="tarjeta-img">
+            <div class="tarjeta-contenido">
+                <h3>EcoEnergía Solar</h3>
+                <p>Instalación de paneles solares en comunidades rurales aisladas.</p>
+                <div class="progreso-contenedor">
+                    <div class="progreso-barra" style="width: 65%;"></div>
+                </div>
+                <div class="tarjeta-metas">
+                    <span>65% alcanzado</span>
+                    <span>Meta: $15,000</span>
+                </div>
+                <button class="boton-invertir">APOYAR PROYECTO</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="actividad.js"></script>
+</body>
+</html>
