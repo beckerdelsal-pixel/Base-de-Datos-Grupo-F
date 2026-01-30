@@ -240,3 +240,109 @@ body {
     color: var(--azul-oscuro);
     font-size: 0.95rem;
 }
+
+/*inicio de sesion login*/
+.contenedor-formulario {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh; /* Centra el formulario verticalmente */
+    padding: 20px;
+}
+
+.tarjeta-form {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.login-header h2 {
+    color: var(--azul-oscuro);
+    margin-bottom: 10px;
+    font-size: 1.8rem;
+}
+
+.login-header p {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 0.9rem;
+}
+
+/* --- Links y Detalles --- */
+.link-olvido {
+    display: block;
+    text-align: right;
+    font-size: 0.8rem;
+    color: var(--azul-medio);
+    text-decoration: none;
+    margin-top: 5px;
+}
+
+.link-olvido:hover {
+    color: var(--verde-exito);
+}
+
+.form-footer {
+    margin-top: 25px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    font-size: 0.9rem;
+}
+
+.form-footer a {
+    color: var(--verde-exito);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.form-footer a:hover {
+    text-decoration: underline;
+}
+
+
+/* --- Contenedores Base --- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+/* --- Clase Inversionista --- */
+.perfil-inversionista .stat-card {
+    border-left: 5px solid var(--azul-medio);
+    background: #f0f4f8;
+}
+
+.perfil-inversionista .valor {
+    color: var(--azul-oscuro);
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* --- Clase Emprendedor --- */
+.perfil-emprendedor .stat-card {
+    border-left: 5px solid #8e4ec9; /* Morado creativo */
+    background: #f9f5ff;
+}
+
+.perfil-emprendedor .valor {
+    color: #5a189a;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+/* --- Tarjetas de Dashboard --- */
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.3s;
+}
+
+.stat-card:hover { transform: translateY(-5px); }
