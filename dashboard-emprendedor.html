@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Emprendedor - CrowdFunding</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+<body class="bg-dashboard">
+    <div id="loader-wrapper"><div class="loader"></div><p>Cargando tu panel...</p></div>
+
+    <nav class="menu">
+        <div class="menu_contenedor">
+            <span class="user-name">Hola, Emprendedor 🚀</span>
+            <a href="index.html" class="boton-enlace">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="contenedor-principal">
+        <div class="cabecera-dash">
+            <h1>Gestión de mis Proyectos</h1>
+            <button class="boton-primario" onclick="mostrarFormulario()">+ Iniciar Nuevo Proyecto</button>
+        </div>
+
+        <div class="dashboard-grid perfil-emprendedor">
+            <div class="stat-card">
+                <h3>Recaudado Total</h3>
+                <p class="valor">$0.00</p>
+            </div>
+            <div class="stat-card">
+                <h3>Vistas de Proyecto</h3>
+                <p class="valor">0</p>
+            </div>
+        </div>
+
+        <section id="seccion-nuevo-proyecto" style="display:none;" class="tarjeta-form wide">
+            <h2>Detalles del Proyecto</h2>
+            <div class="campo">
+                <label>Nombre del Proyecto</label>
+                <input type="text" id="nombre-p" placeholder="Ej. Dron de Rescate Solar">
+            </div>
+            <div class="campo">
+                <label>Meta de Financiación ($)</label>
+                <input type="number" id="meta-p" placeholder="5000">
+            </div>
+            <div class="campo">
+                <label>Descripción</label>
+                <textarea id="desc-p" rows="4"></textarea>
+            </div>
+            <button class="boton-primario btn-cargar" onclick="publicarProyecto()">Publicar en la Galería</button>
+        </section>
+    </main>
+
+    <script src="actividad.js"></script>
+</body>
+</html>

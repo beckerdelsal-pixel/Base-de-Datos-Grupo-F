@@ -1,3 +1,6 @@
+/* =========================================
+   1. FUNCIONES GLOBALES (Loader y UI)
+   ========================================= */
 function mostrarLoader() {
     const loader = document.getElementById("loader-wrapper");
     if (loader) loader.classList.remove("loader-hidden");
@@ -8,79 +11,69 @@ function ocultarLoader() {
     if (loader) loader.classList.add("loader-hidden");
 }
 
-// Ocultar al cargar y seguro de vida
+// Ocultar al cargar y seguro de vida de 4s
 window.addEventListener("load", () => setTimeout(ocultarLoader, 500));
 setTimeout(ocultarLoader, 4000);
 
 /* =========================================
-   2. SIMULACIÓN DE SESIÓN Y DASHBOARD
+   2. LÓGICA DE REDIRECCIÓN Y SESIÓN
    ========================================= */
-// Cambia el rol a 'emprendedor' para ver la otra interfaz
-const usuarioLogueado = {
-    nombre: "Alex",
-    rol: "inversionista" 
-};
+function manejarRedireccion() {
+    // Leemos el rol guardado en localStorage
+    const rol = localStorage.getItem('userRol'); 
 
-function cargarDashboard() {
-    const contenedor = document.getElementById("dashboard-dinamico");
-    if (!contenedor) return;
-
-    if (usuarioLogueado.rol === "inversionista") {
-        contenedor.className = "dashboard-grid perfil-inversionista";
-        contenedor.innerHTML = `
-            <div class="stat-card">
-                <h3>💰 Mi Capital Invertido</h3>
-                <p class="valor">$12,450.00</p>
-                <button class="boton-invertir" onclick="alert('Abriendo historial...')">Ver Detalle</button>
-            </div>
-            <div class="stat-card">
-                <h3>📂 Proyectos Apoyados</h3>
-                <p class="valor">8</p>
-                <p>3 con actualizaciones hoy.</p>
-            </div>
-            <div class="stat-card">
-                <h3>📈 Rendimiento</h3>
-                <p class="valor">+12.5%</p>
-            </div>
-        `;
-    } else {
-        contenedor.className = "dashboard-grid perfil-emprendedor";
-        contenedor.innerHTML = `
-            <div class="stat-card">
-                <h3>🚀 Mi Recaudación</h3>
-                <p class="valor">$45,000 / $60,000</p>
-                <div class="progreso-contenedor"><div class="progreso-barra" style="width: 75%;"></div></div>
-            </div>
-            <div class="stat-card">
-                <h3>👥 Inversionistas</h3>
-                <p class="valor">24</p>
-                <button class="boton-primario">Notificar Avance</button>
-            </div>
-            <div class="stat-card">
-                <h3>⏳ Tiempo Restante</h3>
-                <p class="valor">14 Días</p>
-            </div>
-        `;
-    }
+    // Simulamos tiempo de carga para mostrar el loader
+    setTimeout(() => {
+        if (rol === 'emprendedor') {
+            window.location.href = 'dashboard-emprendedor.html';
+        } else if (rol === 'inversionista') {
+            window.location.href = 'dashboard-inversionista.html';
+        } else {
+            window.location.href = 'index.html'; 
+        }
+    }, 2000); 
 }
 
 /* =========================================
-   3. EVENTOS Y VALIDACIONES (DOMContentLoaded)
+   3. EVENTOS Y VALIDACIONES
    ========================================= */
 document.addEventListener("DOMContentLoaded", () => {
     
-    // Ejecutar carga de dashboard si existe el contenedor
-    cargarDashboard();
-
-    // Manejo de botones con carga y validación
     const botonesCarga = document.querySelectorAll(".btn-cargar");
+    
     botonesCarga.forEach(btn => {
         btn.addEventListener("click", function(e) {
             const formulario = this.closest('form');
+            
             if (formulario) {
+                // Si el formulario no es válido (nativa HTML5), no hace nada
                 if (!formulario.checkValidity()) return;
+
+                // --- CAPTURA DE ROL (Basado en tu HTML) ---
+                // Buscamos el input con name="tipo_usuario" que esté marcado
+                const inputRol = formulario.querySelector('input[name="tipo_usuario"]:checked');
+                
+                if (inputRol) {
+                    // Guardamos 'inversionista' o 'emprendedor'
+                    localStorage.setItem('userRol', inputRol.value);
+                    localStorage.setItem('isLoggedIn', 'true');
+                }
+                
+                // Evitamos el envío real para que se vea la animación
+                e.preventDefault(); 
+                
+                mostrarLoader();
+                manejarRedireccion();
+            } else {
+                // Si es un enlace normal con la clase btn-cargar
+                mostrarLoader();
             }
-            mostrarLoader();
         });
     });
 });
+
+/* Función para el botón del Dashboard Emprendedor */
+function mostrarFormulario() {
+    const form = document.getElementById('seccion-nuevo-proyecto');
+    if(form) form.style.display = 'block';
+}
