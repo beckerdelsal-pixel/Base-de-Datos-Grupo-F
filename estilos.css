@@ -346,3 +346,8 @@ body {
 }
 
 .stat-card:hover { transform: translateY(-5px); }
+
+@media (max-width: 768px) {
+  /* Estilos para tablets y celulares */
+  .contenedor { width: 95%; }
+}
