@@ -77,3 +77,55 @@ function mostrarFormulario() {
     const form = document.getElementById('seccion-nuevo-proyecto');
     if(form) form.style.display = 'block';
 }
+
+
+/* =========================================
+   4. GESTIÓN DE PROYECTOS (EMPRENDEDOR)
+   ========================================= */
+
+// Función para guardar el proyecto en el navegador
+
+function publicarProyecto() {
+    // 1. Capturamos los valores
+    const nombre = document.getElementById('nombre-p').value;
+    const meta = document.getElementById('meta-p').value;
+    const descripcion = document.getElementById('desc-p').value;
+
+    // 2. VALIDACIÓN: Si falta algo, lanzamos alert y DETENEMOS con 'return'
+    if (nombre.trim() === "" || meta.trim() === "" || descripcion.trim() === "") {
+        alert("Por favor, completa todos los campos del proyecto antes de publicar.");
+        return; // IMPORTANTE: Esto evita que el código siga hacia el loader
+    }
+
+    // 3. Si todo está bien, RECIÉN AQUÍ activamos el loader
+    mostrarLoader();
+
+    // 4. Creamos el objeto
+    const nuevoProyecto = {
+        id: Date.now(),
+        nombre: nombre,
+        meta: meta,
+        descripcion: descripcion,
+        recaudado: 0
+    };
+
+    // 5. Guardamos en LocalStorage
+    let proyectos = JSON.parse(localStorage.getItem('misProyectos')) || [];
+    proyectos.push(nuevoProyecto);
+    localStorage.setItem('misProyectos', JSON.stringify(proyectos));
+
+    // 6. Simulamos el proceso de guardado y cerramos
+    setTimeout(() => {
+        alert("¡Proyecto publicado con éxito!");
+        document.getElementById('seccion-nuevo-proyecto').style.display = 'none';
+        
+        // Limpiamos campos
+        document.getElementById('nombre-p').value = "";
+        document.getElementById('meta-p').value = "";
+        document.getElementById('desc-p').value = "";
+        
+        ocultarLoader();
+        // Opcional: recargar la lista de proyectos en pantalla
+        if (typeof renderizarProyectos === 'function') renderizarProyectos();
+    }, 1500);
+}
