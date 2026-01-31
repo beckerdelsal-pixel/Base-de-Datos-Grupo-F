@@ -510,3 +510,96 @@ body {
     background: white;
     color: #1B263B;
 }
+
+/* =========================================
+   ESTILOS DEL FOOTER (PIE DE PÁGINA)
+   ========================================= */
+.pie-pagina {
+    background-color: #1B263B; /* Azul oscuro profundo */
+    color: #E0E1DD;
+    padding: 60px 0 20px 0;
+    margin-top: 50px;
+}
+
+.footer-contenedor {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 40px;
+    padding: 0 20px;
+}
+
+.footer-columna h3.footer-logo {
+    font-size: 1.8rem;
+    color: #52B788; /* Verde éxito */
+    margin-bottom: 15px;
+}
+
+.footer-columna h4 {
+    font-size: 1.1rem;
+    color: white;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #52B788;
+    display: inline-block;
+}
+
+.footer-columna ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-columna ul li {
+    margin-bottom: 10px;
+}
+
+.footer-columna ul li a {
+    color: #BDC3C7;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-columna ul li a:hover {
+    color: #52B788;
+}
+
+.redes-sociales {
+    display: flex;
+    gap: 15px;
+    font-size: 1.5rem;
+}
+
+.redes-sociales a {
+    text-decoration: none;
+    transition: transform 0.3s;
+}
+
+.redes-sociales a:hover {
+    transform: translateY(-5px);
+}
+
+.footer-inferior {
+    text-align: center;
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+}
+
+/* Ajuste para móviles */
+@media (max-width: 768px) {
+    .footer-contenedor {
+        grid-template-columns: 1fr; /* Una columna en móvil */
+        text-align: center;
+    }
+    
+    .footer-columna h4 {
+        display: block;
+        margin: 20px auto;
+        width: fit-content;
+    }
+
+    .redes-sociales {
+        justify-content: center;
+    }
+}
