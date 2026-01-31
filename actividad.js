@@ -11,18 +11,34 @@ function ocultarLoader() {
     if (loader) loader.classList.add("loader-hidden");
 }
 
-// Ocultar al cargar y seguro de vida de 4s
-window.addEventListener("load", () => setTimeout(ocultarLoader, 500));
+/** * SEGURO DE VIDA DEL LOADER:
+ * Si por algún error de código el loader no se oculta, 
+ * esta función lo fuerza a cerrarse tras 5 segundos.
+ */
+function seguridadLoader() {
+    setTimeout(() => {
+        const loader = document.getElementById("loader-wrapper");
+        if (loader && !loader.classList.contains("loader-hidden")) {
+            console.warn("⚠️ El loader tardó demasiado. Forzando cierre de seguridad.");
+            ocultarLoader();
+        }
+    }, 5000);
+}
+
+window.addEventListener("load", () => {
+    setTimeout(ocultarLoader, 500);
+    seguridadLoader();
+});
+
+// Respaldo por si el evento 'load' falla
 setTimeout(ocultarLoader, 4000);
 
 /* =========================================
    2. LÓGICA DE REDIRECCIÓN Y SESIÓN
    ========================================= */
 function manejarRedireccion() {
-    // Leemos el rol guardado en localStorage
     const rol = localStorage.getItem('userRol'); 
 
-    // Simulamos tiempo de carga para mostrar el loader
     setTimeout(() => {
         if (rol === 'emprendedor') {
             window.location.href = 'dashboard-emprendedor.html';
@@ -39,6 +55,11 @@ function manejarRedireccion() {
    ========================================= */
 document.addEventListener("DOMContentLoaded", () => {
     
+    // Animación de estadísticas (si estamos en el index)
+    if (document.getElementById('stat-users')) {
+        animarNumeros();
+    }
+
     const botonesCarga = document.querySelectorAll(".btn-cargar");
     
     botonesCarga.forEach(btn => {
@@ -46,26 +67,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const formulario = this.closest('form');
             
             if (formulario) {
-                // Si el formulario no es válido (nativa HTML5), no hace nada
                 if (!formulario.checkValidity()) return;
 
-                // --- CAPTURA DE ROL (Basado en tu HTML) ---
-                // Buscamos el input con name="tipo_usuario" que esté marcado
                 const inputRol = formulario.querySelector('input[name="tipo_usuario"]:checked');
                 
                 if (inputRol) {
-                    // Guardamos 'inversionista' o 'emprendedor'
                     localStorage.setItem('userRol', inputRol.value);
                     localStorage.setItem('isLoggedIn', 'true');
                 }
                 
-                // Evitamos el envío real para que se vea la animación
                 e.preventDefault(); 
-                
                 mostrarLoader();
                 manejarRedireccion();
             } else {
-                // Si es un enlace normal con la clase btn-cargar
                 mostrarLoader();
             }
         });
@@ -78,54 +92,136 @@ function mostrarFormulario() {
     if(form) form.style.display = 'block';
 }
 
-
 /* =========================================
    4. GESTIÓN DE PROYECTOS (EMPRENDEDOR)
    ========================================= */
 
-// Función para guardar el proyecto en el navegador
-
 function publicarProyecto() {
-    // 1. Capturamos los valores
-    const nombre = document.getElementById('nombre-p').value;
-    const meta = document.getElementById('meta-p').value;
-    const descripcion = document.getElementById('desc-p').value;
+    // 1. Capturamos los elementos para evitar errores de referencia
+    const inputNombre = document.getElementById('nombre-p');
+    const inputMeta = document.getElementById('meta-p');
+    const inputDesc = document.getElementById('desc-p');
 
-    // 2. VALIDACIÓN: Si falta algo, lanzamos alert y DETENEMOS con 'return'
-    if (nombre.trim() === "" || meta.trim() === "" || descripcion.trim() === "") {
-        alert("Por favor, completa todos los campos del proyecto antes de publicar.");
-        return; // IMPORTANTE: Esto evita que el código siga hacia el loader
+    if (!inputNombre || !inputMeta || !inputDesc) {
+        console.error("❌ No se encontraron los campos del formulario en el HTML.");
+        return;
     }
 
-    // 3. Si todo está bien, RECIÉN AQUÍ activamos el loader
+    // 2. VALIDACIÓN: Si falta algo, detenemos antes de mostrar el loader
+    if (inputNombre.value.trim() === "" || inputMeta.value.trim() === "" || inputDesc.value.trim() === "") {
+        alert("⚠️ Por favor, completa todos los campos del proyecto antes de publicar.");
+        return; 
+    }
+
+    // 3. Activar el loader solo si la validación es exitosa
     mostrarLoader();
 
-    // 4. Creamos el objeto
+    // 4. Crear el objeto
     const nuevoProyecto = {
         id: Date.now(),
-        nombre: nombre,
-        meta: meta,
-        descripcion: descripcion,
+        nombre: inputNombre.value,
+        meta: inputMeta.value,
+        descripcion: inputDesc.value,
         recaudado: 0
     };
 
-    // 5. Guardamos en LocalStorage
+    // 5. Guardar en LocalStorage
     let proyectos = JSON.parse(localStorage.getItem('misProyectos')) || [];
     proyectos.push(nuevoProyecto);
     localStorage.setItem('misProyectos', JSON.stringify(proyectos));
 
-    // 6. Simulamos el proceso de guardado y cerramos
+    // 6. Simulamos el proceso de guardado
     setTimeout(() => {
-        alert("¡Proyecto publicado con éxito!");
+        alert("✅ ¡Proyecto publicado con éxito!");
         document.getElementById('seccion-nuevo-proyecto').style.display = 'none';
         
         // Limpiamos campos
-        document.getElementById('nombre-p').value = "";
-        document.getElementById('meta-p').value = "";
-        document.getElementById('desc-p').value = "";
+        inputNombre.value = "";
+        inputMeta.value = "";
+        inputDesc.value = "";
         
         ocultarLoader();
-        // Opcional: recargar la lista de proyectos en pantalla
+        
         if (typeof renderizarProyectos === 'function') renderizarProyectos();
     }, 1500);
+}
+
+/* =========================================
+   5. SISTEMA DE BÚSQUEDA DINÁMICA
+   ========================================= */
+const baseDeDatosProyectos = [
+    { nombre: "Dron de Rescate Solar", categoria: "Tecnología" },
+    { nombre: "Huertos Verticales Urbanos", categoria: "Ecología" },
+    { nombre: "App de Salud Mental", categoria: "Salud" },
+    { nombre: "Limpieza de Océanos Pro", categoria: "Ecología" },
+    { nombre: "Realidad Aumentada Educativa", categoria: "Tecnología" }
+];
+
+document.addEventListener("DOMContentLoaded", () => {
+    const inputBusqueda = document.getElementById('input-busqueda');
+    const contenedorResultados = document.getElementById('resultados-busqueda');
+
+    if (inputBusqueda && contenedorResultados) {
+        inputBusqueda.addEventListener('input', (e) => {
+            const texto = e.target.value.toLowerCase();
+            contenedorResultados.innerHTML = '';
+
+            if (texto.length > 0) {
+                const coincidencias = baseDeDatosProyectos.filter(p => 
+                    p.nombre.toLowerCase().includes(texto) || 
+                    p.categoria.toLowerCase().includes(texto)
+                );
+
+                if (coincidencias.length > 0) {
+                    contenedorResultados.style.display = 'block';
+                    coincidencias.forEach(p => {
+                        const div = document.createElement('div');
+                        div.className = 'resultado-item';
+                        div.innerHTML = `
+                            <span class="categoria">${p.categoria}</span>
+                            <span>${p.nombre}</span>
+                        `;
+                        div.onclick = () => {
+                            inputBusqueda.value = p.nombre;
+                            contenedorResultados.style.display = 'none';
+                        };
+                        contenedorResultados.appendChild(div);
+                    });
+                } else {
+                    contenedorResultados.style.display = 'none';
+                }
+            } else {
+                contenedorResultados.style.display = 'none';
+            }
+        });
+    }
+});
+
+/* =========================================
+   6. ANIMACIÓN DE ESTADÍSTICAS (INDEX)
+   ========================================= */
+function animarNumeros() {
+    const stats = [
+        { id: 'stat-users', final: 15000, sufijo: '+' },
+        { id: 'stat-funded', final: 450, sufijo: '' },
+        { id: 'stat-money', final: 2.5, sufijo: 'M' }
+    ];
+
+    stats.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (!el) return;
+        
+        let inicio = 0;
+        let incremento = s.final / 50;
+        
+        const intervalo = setInterval(() => {
+            inicio += incremento;
+            if (inicio >= s.final) {
+                el.innerText = s.final + s.sufijo;
+                clearInterval(intervalo);
+            } else {
+                el.innerText = Math.floor(inicio) + s.sufijo;
+            }
+        }, 30);
+    });
 }

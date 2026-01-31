@@ -17,51 +17,120 @@
 
     <header class="cabecera">
         <div class="titulos">
-            <h1>CrowdBoost: La Mejor Decision Para Inversores y Emprendedores</h1>
+            <h1>CrowdBoost: La Mejor Decisión Para Inversores y Emprendedores</h1>
         </div>
     </header>
 
     <nav class="menu">
         <div class="menu_contenedor">
             <div class="menu_opciones">
-                <a href="index.html" class="boton-enlace btn-cargar">INICIO</a>
+                <a href="index.html" class="boton-enlace btn-cargar"><img src="imagenes/casa.png" width="15px"
+                        height="15px" /> home</a>
             </div>
             <div class="menu_opciones">
                 <a href="login.html" class="boton-enlace btn-cargar"><img src="imagenes/login.png" width="15px"
-                        height="15px" /> SESIÓN</a>
+                        height="15px" /> login</a>
             </div>
             <div class="menu_opciones">
-                <a href="proyectos.html" class="boton-enlace btn-cargar">REGISTRARSE</a>
+                <a href="registro.html" class="boton-enlace btn-cargar"><img src="imagenes/registro.png" width="15px"
+                        height="15px" /> sign up</a>
             </div>
-            <div class="menu_opciones">
-                <div class="boton_buscar">BUSCAR</div>
+            <div class="menu_opciones search-container">
+                <div class="search-box">
+                    <input type="text" id="input-busqueda" placeholder="Buscar proyectos..." autocomplete="off">
+                    <div class="boton_buscar">🔍</div>
+                </div>
+                <div id="resultados-busqueda" class="resultados-lista"></div>
             </div>
         </div>
     </nav>
-    <!-- 
-    <main class="contenedor-proyectos">
-        
-        <div class="tarjeta">
-            <img src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?auto=format&fit=crop&w=300" alt="Proyecto" class="tarjeta-img">
-            <div class="tarjeta-contenido">
-                <h3>EcoEnergía Solar</h3>
-                <p>Instalación de paneles solares en comunidades rurales aisladas.</p>
-                <div class="progreso-contenedor">
-                    <div class="progreso-barra" style="width: 65%;"></div>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Impulsa ideas que transforman el mundo</h1>
+                <p>La plataforma donde los sueños de los emprendedores encuentran el respaldo de los inversionistas.</p>
+                <div class="hero-btns">
+                    <a href="registro.html" class="btn-directo btn-primario">Empezar mi Proyecto</a>
+                    <a href="#comunidad" class="btn-directo btn-secundario">Conocer la Comunidad</a>
                 </div>
-                <div class="tarjeta-metas">
-                    <span>65% alcanzado</span>
-                    <span>Meta: $15,000</span>
-                </div>
-                <button class="boton-invertir">APOYAR PROYECTO</button>
             </div>
-        </div>
-        
-    <div id="dashboard-dinamico" class="contenedor-principal">
-    </div>
-    
+        </section>
+
+        <section class="estadisticas-globales">
+            <div class="stat-item">
+                <h2 id="stat-users">0</h2>
+                <p>Usuarios Activos</p>
+            </div>
+            <div class="stat-item">
+                <h2 id="stat-funded">0</h2>
+                <p>Proyectos Financiados</p>
+            </div>
+            <div class="stat-item">
+                <h2 id="stat-money">0</h2>
+                <p>Capital Movilizado ($)</p>
+            </div>
+        </section>
+
+        <section class="info-seccion">
+            <div class="contenedor-centrado">
+                <div class="info-grid">
+                    <div class="info-texto">
+                        <h2>¿Qué es el Crowdfunding?</h2>
+                        <p>Es un modelo de cooperación colectiva que permite a cualquier persona financiar proyectos
+                            creativos o de negocio. En <strong>CrowdBoost</strong>, democratizamos el acceso al capital.
+                        </p>
+                        <div class="roles-explicacion">
+                            <div class="rol-box">
+                                <strong>🚀 Para Emprendedores:</strong>
+                                <p>Publica tu idea, establece una meta y recibe el apoyo de cientos de personas sin
+                                    depender de préstamos bancarios tradicionales.</p>
+                            </div>
+                            <div class="rol-box">
+                                <strong>💰 Para Inversionistas:</strong>
+                                <p>Descubre proyectos innovadores desde su etapa inicial y forma parte de su crecimiento
+                                    con inversiones seguras y transparentes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tips-seccion">
+            <div class="contenedor-centrado">
+                <h2>Tips para el Éxito en CrowdBoost</h2>
+                <div class="tips-container">
+                    <div class="tip-card">
+                        <span class="tip-num">01</span>
+                        <h3>Contenido Visual</h3>
+                        <p>Los proyectos con videos explicativos recaudan hasta un 100% más que los que solo usan texto.
+                        </p>
+                    </div>
+                    <div class="tip-card">
+                        <span class="tip-num">02</span>
+                        <h3>Metas Reales</h3>
+                        <p>Define una meta financiera honesta y detallada para generar confianza inmediata.</p>
+                    </div>
+                    <div class="tip-card">
+                        <span class="tip-num">03</span>
+                        <h3>Comunidad Activa</h3>
+                        <p>Responde preguntas y publica actualizaciones semanalmente para mantener el interés de tus
+                            patrocinadores.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="comunidad" class="comunidad-seccion">
+            <div class="contenedor-centrado">
+                <h2>Nuestra Comunidad</h2>
+                <p>Más que una plataforma, somos un ecosistema de mentes inquietas. Organizamos meetups, talleres de
+                    pitch y brindamos mentorías gratuitas para nuestros miembros destacados.</p>
+            </div>
+        </section>
     </main>
-     -->
+
     <script src="actividad.js"></script>
 </body>
 
