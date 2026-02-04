@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Perfil - CrowdBoost</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+</head>
+<body>
+    <div id="loader-wrapper"><div class="loader"></div><p>Preparando tu perfil...</p></div>
+    
+    <nav class="menu">
+        <div class="menu_contenedor">
+            <div class="menu_opciones">
+                <a href="index.html" class="boton-enlace btn-cargar"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iY3VycmVudENvbG9yIj48cGF0aCBkPSJNMTAgMjB2LTZoNHY2aDV2LThoM0wxMiAzIDIgMTJoM3Y4eiIvPjwvc3ZnPg==" width="15px"
+                        height="15px" /> Inicio</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="login.html" class="boton-enlace btn-cargar"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iY3VycmVudENvbG9yIj48cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTRzLTEuNzktNC00LTQtNCAxLjc5LTQgNCAxLjc5IDQgNCA0em0wIDJjLTIuNjcgMC04IDEuMzQtOCA0djJoMTZ2LTJjMC0yLjY2LTUuMzMtNC04LTR6Ii8+PC9zdmc+" width="15px"
+                        height="15px" /> Iniciar Sesión</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="registro.html" class="boton-enlace btn-cargar"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iY3VycmVudENvbG9yIj48cGF0aCBkPSJNMTUgMTJjMi4yMSAwIDQtMS43OSA0LTRzLTEuNzktNC00LTQtNCAxLjc5LTQgNCAxLjc5IDQgNCA0em0tOS02Yy0yLjIxIDAtNCAxLjc5LTQgNHMxLjc5IDQgNCA0IDQtMS43OSA0LTQtMS43OS00LTQtNHptOSA2Yy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00em0tOSA2Yy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==" width="15px"
+                        height="15px" /> Registrarse</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="contenedor-formulario">
+        <form class="tarjeta-form">
+            <h2>¡Bienvenido a CrowdBoost!</h2>
+            <p>Antes de empezar, cuéntanos quién eres:</p>
+            
+            <div class="selector-rol">
+                <label class="opcion-rol">
+                    <input type="radio" name="tipo_usuario" value="inversionista" checked>
+                    <div class="rol-card">
+                        <span class="icono">💰</span>
+                        <span>Inversionista</span>
+                        <small>Descubre y financia proyectos innovadores</small>
+                    </div>
+                </label>
+                <label class="opcion-rol">
+                    <input type="radio" name="tipo_usuario" value="emprendedor">
+                    <div class="rol-card">
+                        <span class="icono">🚀</span>
+                        <span>Emprendedor</span>
+                        <small>Presenta y financia tus ideas creativas</small>
+                    </div>
+                </label>
+            </div>
+
+            <hr class="divisor">
+
+            <div class="campo">
+                <label for="nombre">Nombre Completo</label>
+                <input id="nombre" name="nombre" type="text" placeholder="Tu nombre completo" required>
+            </div>
+            
+            <div class="campo">
+                <label for="email">Correo Electrónico</label>
+                <input id="email" name="email" type="email" placeholder="email@ejemplo.com" required>
+            </div>
+
+            <div class="campo">
+                <label for="password">Contraseña</label>
+                <input id="password" name="password" type="password" placeholder="Crea una contraseña segura" required>
+                <small style="color: #6B7280; font-size: 12px; display: block; margin-top: 5px;">
+                    Mínimo 6 caracteres, con al menos un número y una mayúscula
+                </small>
+            </div>
+
+            <button type="submit" class="boton-primario btn-cargar">CREAR CUENTA</button>
+            
+            <div class="form-footer">
+                <p>¿Ya tienes una cuenta? <a href="login.html">Inicia sesión aquí</a></p>
+                <a href="index.html" class="enlace-retorno">← Volver al inicio</a>
+            </div>
+        </form>
+    </div>
+
+    <script src="actividad.js"></script>
+</body>
+</html>

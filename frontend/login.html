@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - CrowdBoost</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔐</text></svg>">
+</head>
+<body>
+    <div id="loader-wrapper">
+        <div class="loader"></div>
+        <p>Validando credenciales...</p>
+    </div>
+
+    <nav class="menu">
+        <div class="menu_contenedor">
+            <div class="menu_opciones">
+                <a href="index.html" class="boton-enlace btn-cargar"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iY3VycmVudENvbG9yIj48cGF0aCBkPSJNMTAgMjB2LTZoNHY2aDV2LThoM0wxMiAzIDIgMTJoM3Y4eiIvPjwvc3ZnPg==" width="15px"
+                        height="15px" /> Inicio</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="login.html" class="boton-enlace btn-cargar"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iY3VycmVudENvbG9yIj48cGF0aCBkPSJNMTIgMTJjMi4yMSAwIDQtMS43OSA0LTRzLTEuNzktNC00LTQtNCAxLjc5LTQgNCAxLjc5IDQgNCA0em0wIDJjLTIuNjcgMC04IDEuMzQtOCA0djJoMTZ2LTJjMC0yLjY2LTUuMzMtNC04LTR6Ii8+PC9zdmc+" width="15px"
+                        height="15px" /> Iniciar Sesión</a>
+            </div>
+            <div class="menu_opciones">
+                <a href="registro.html" class="boton-enlace btn-cargar"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iY3VycmVudENvbG9yIj48cGF0aCBkPSJNMTUgMTJjMi4yMSAwIDQtMS43OSA0LTRzLTEuNzktNC00LTQtNCAxLjc5LTQgNCAxLjc5IDQgNCA0em0tOS02Yy0yLjIxIDAtNCAxLjc5LTQgNHMxLjc5IDQgNCA0IDQtMS43OSA0LTQtMS43OS00LTQtNHptOSA2Yy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00em0tOSA2Yy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==" width="15px"
+                        height="15px" /> Registrarse</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="contenedor-formulario">
+        <form class="tarjeta-form">
+            <div class="login-header">
+                <h2>Bienvenido de nuevo</h2>
+                <p>Ingresa a tu cuenta de inversionista o emprendedor</p>
+            </div>
+
+            <div class="campo">
+                <label for="correo">Correo Electrónico</label>
+                <input id="correo" name="email" type="email" placeholder="ejemplo@correo.com" required>
+            </div>
+
+            <div class="campo">
+                <label for="contraseña">Contraseña</label>
+                <input id="contraseña" name="password" type="password" placeholder="Tu contraseña" required>
+                <a href="#" class="link-olvido">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <button type="submit" class="boton-primario btn-cargar">ENTRAR</button>
+
+            <div class="form-footer">
+                <p>¿Aún no tienes cuenta? <a href="registro.html" class="btn-cargar">Crea una aquí</a></p>
+            </div>
+        </form>
+    </main>
+
+    <script src="actividad.js"></script>
+</body>
+</html>

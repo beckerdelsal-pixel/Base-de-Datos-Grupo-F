@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Emprendedor - CrowdBoost</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+</head>
+
+<body class="bg-dashboard">
+    <div id="loader-wrapper">
+        <div class="loader"></div>
+        <p>Cargando tu panel...</p>
+    </div>
+
+    <nav class="menu">
+        <div class="menu_contenedor">
+            <span class="user-name">Hola, Emprendedor 🚀</span>
+            <div style="display: flex; gap: 10px;">
+                <a href="index.html" class="boton-enlace" onclick="event.preventDefault(); cerrarSesion();">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="contenedor-principal">
+        <div class="cabecera-dash">
+            <h1>Gestión de mis Proyectos</h1>
+            <button class="boton-primario" onclick="mostrarFormularioProyecto()">+ Iniciar Nuevo Proyecto</button>
+        </div>
+
+        <div class="dashboard-grid perfil-emprendedor">
+            <!-- Las estadísticas se cargarán dinámicamente aquí -->
+        </div>
+
+        <div id="seccion-nuevo-proyecto" style="display:none;" class="tarjeta-form wide">
+            <h2>Detalles del Proyecto</h2>
+            <div class="campo">
+                <label for="nombre-p">Nombre del Proyecto *</label>
+                <input type="text" id="nombre-p" placeholder="Ej. Dron de Rescate Solar" required>
+            </div>
+            <div class="campo">
+                <label for="meta-p">Meta de Financiación ($) *</label>
+                <input type="number" id="meta-p" placeholder="5000" min="100" max="1000000" required>
+                <small style="color: #6B7280; font-size: 12px;">Mínimo $100 - Máximo $1,000,000</small>
+            </div>
+            <div class="campo">
+                <label for="desc-p">Descripción *</label>
+                <textarea id="desc-p" rows="4" placeholder="Describe tu proyecto en detalle... (mínimo 50 caracteres)" required></textarea>
+            </div>
+            <div class="campo">
+                <label for="categoria-p">Categoría</label>
+                <select id="categoria-p">
+                    <option value="tecnologia">Tecnología</option>
+                    <option value="ecologia">Ecología</option>
+                    <option value="salud">Salud</option>
+                    <option value="educacion">Educación</option>
+                    <option value="arte">Arte</option>
+                    <option value="otros">Otros</option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="dias-p">Fecha Límite (días desde hoy)</label>
+                <select id="dias-p">
+                    <option value="30">30 días</option>
+                    <option value="60">60 días</option>
+                    <option value="90">90 días</option>
+                    <option value="120">120 días</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="button" class="boton-primario" onclick="publicarProyecto()">Publicar Proyecto</button>
+                <button type="button" class="btn-secundario" onclick="ocultarFormularioProyecto()">Cancelar</button>
+            </div>
+        </div>
+
+        <div class="lista-proyectos">
+            <!-- Los proyectos se cargarán dinámicamente aquí -->
+        </div>
+        
+        <div style="margin-top: 40px; text-align: center;">
+            <a href="index.html" class="boton-enlace">← Volver a la página principal</a>
+        </div>
+    </main>
+
+    <script src="actividad.js"></script>
+    <script>
+        // Estas funciones están definidas en actividad.js
+        // Solo se mantienen aquí para compatibilidad con el HTML original
+    </script>
+</body>
+
+</html>

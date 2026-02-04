@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Inversionista - CrowdBoost</title>
+    <link rel="stylesheet" href="estilos.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+</head>
+
+<body class="bg-dashboard">
+    <div id="loader-wrapper">
+        <div class="loader"></div>
+        <p>Cargando tus inversiones...</p>
+    </div>
+
+    <nav class="menu">
+        <div class="menu_contenedor">
+            <span class="user-name">Hola, Inversionista 💰</span>
+            <div style="display: flex; gap: 10px;">
+                <a href="index.html" class="boton-enlace" onclick="event.preventDefault(); cerrarSesion();">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="contenedor-principal">
+        <div class="cabecera-dash">
+            <h1>Mi Cartera de Inversión</h1>
+            <button class="boton-primario" onclick="cargarSaldo()">💳 Cargar Saldo</button>
+        </div>
+
+        <div class="dashboard-grid perfil-inversionista">
+            <!-- Las estadísticas se cargarán dinámicamente aquí -->
+        </div>
+
+        <div class="lista-inversiones">
+            <!-- Las inversiones se cargarán dinámicamente aquí -->
+        </div>
+
+        <div class="proyectos-recomendados">
+            <h3>Proyectos Recomendados para Ti</h3>
+            <div id="proyectos-recomendados-container" class="contenedor-proyectos">
+                <!-- Los proyectos recomendados se cargarán dinámicamente aquí -->
+            </div>
+        </div>
+        
+        <div style="margin-top: 40px; text-align: center;">
+            <a href="index.html" class="boton-primario">🔍 Explorar Más Proyectos</a>
+            <a href="index.html" class="boton-enlace" style="margin-left: 10px;">← Volver al inicio</a>
+        </div>
+    </main>
+
+    <script src="actividad.js"></script>
+</body>
+
+</html>
