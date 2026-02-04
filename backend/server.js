@@ -34,7 +34,7 @@ app.use(cors({
     // En producción, permitir solo dominios específicos
     const allowedOrigins = [
       'https://crowdfunding-app.onrender.com',
-      'https://tudominio.com', // Cambia esto por tu dominio
+      'https://crowdfunding-app-qkjm.onrender.com', // Cambia esto por tu dominio
     ];
     
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
