@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Inversionista - CrowdFunding</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+
+<body class="bg-dashboard">
+    <div id="loader-wrapper">
+        <div class="loader"></div>
+        <p>Cargando tus inversiones...</p>
+    </div>
+
+    <nav class="menu">
+        <div class="menu_contenedor">
+            <span class="user-name">Hola, Inversionista 💰</span>
+            <a href="index.html" class="boton-enlace">Cerrar Sesión</a>
+        </div>
+    </nav>
+
+    <main class="contenedor-principal">
+        <div class="cabecera-dash">
+            <h1>Mi Cartera de Inversión</h1>
+            <button class="boton-primario" onclick="cargarSaldo()">Cargar Saldo</button>
+        </div>
+
+        <div class="dashboard-grid perfil-inversionista">
+            <!-- Las estadísticas se cargarán dinámicamente aquí -->
+        </div>
+
+        <div class="lista-inversiones">
+            <h3>Seguimiento de Inversiones</h3>
+            <!-- Las inversiones se cargarán dinámicamente aquí -->
+        </div>
+
+        <div class="proyectos-recomendados" style="margin-top: 40px;">
+            <h3>Proyectos Recomendados para Ti</h3>
+            <div id="proyectos-recomendados-container" class="contenedor-proyectos">
+                <!-- Los proyectos recomendados se cargarán dinámicamente aquí -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Función para cargar saldo
+        async function cargarSaldo() {
+            const monto = prompt("Ingresa el monto a recargar:");
+            if (!monto || isNaN(monto)) {
+                alert("Por favor, ingresa un monto válido.");
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('http://localhost:3000/api/saldo/recargar', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ monto: parseFloat(monto) })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert("✅ Saldo recargado exitosamente!");
+                    location.reload();
+                } else {
+                    alert(`❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert("❌ Error de conexión");
+            }
+        }
+    </script>
+
+    <script src="actividad.js"></script>
+</body>
+
+</html>
