@@ -47,46 +47,46 @@ class Project {
   }
   
   // Obtener todos los proyectos activos
-  static async findAllActive(limit = 20, offset = 0) {
-    try {
-      const result = await db.query(  // ✅ Cambiado: db.query
-        `SELECT p.*, u.nombre as nombre_emprendedor,
-                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
-                EXTRACT(DAY FROM (p.fecha_limite - CURRENT_DATE)) as dias_restantes
-         FROM proyectos p
-         JOIN usuarios u ON p.id_emprendedor = u.id
-         WHERE p.estado = 'activo' AND p.fecha_limite > CURRENT_DATE
-         ORDER BY p.fecha_creacion DESC
-         LIMIT $1 OFFSET $2`,
-        [limit, offset]
-      );
-      
-      return result.rows;
-    } catch (error) {
-      console.error('Error obteniendo proyectos activos:', error);
-      throw error;
-    }
+static async findAllActive(limit = 20, offset = 0) {
+  try {
+    const result = await db.query(
+      `SELECT p.*, u.nombre as nombre_emprendedor,
+              (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+              EXTRACT(DAY FROM (TO_TIMESTAMP(p.fecha_limite) - CURRENT_DATE)) as dias_restantes
+       FROM proyectos p
+       JOIN usuarios u ON p.id_emprendedor = u.id
+       WHERE p.estado = 'activo' AND TO_TIMESTAMP(p.fecha_limite) > CURRENT_DATE
+       ORDER BY p.fecha_creacion DESC
+       LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+    
+    return result.rows;
+  } catch (error) {
+    console.error('Error obteniendo proyectos activos:', error);
+    throw error;
   }
+}
   
   // Obtener proyectos por emprendedor
-  static async findByEntrepreneur(emprendedorId) {
-    try {
-      const result = await db.query(  // ✅ Cambiado: db.query
-        `SELECT p.*, 
-                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
-                EXTRACT(DAY FROM (p.fecha_limite - CURRENT_DATE)) as dias_restantes
-         FROM proyectos p
-         WHERE p.id_emprendedor = $1
-         ORDER BY p.fecha_creacion DESC`,
-        [emprendedorId]
-      );
-      
-      return result.rows;
-    } catch (error) {
-      console.error('Error obteniendo proyectos por emprendedor:', error);
-      throw error;
-    }
+static async findByEntrepreneur(emprendedorId) {
+  try {
+    const result = await db.query(
+      `SELECT p.*, 
+              (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+              EXTRACT(DAY FROM (TO_TIMESTAMP(p.fecha_limite) - CURRENT_DATE)) as dias_restantes
+       FROM proyectos p
+       WHERE p.id_emprendedor = $1
+       ORDER BY p.fecha_creacion DESC`,
+      [emprendedorId]
+    );
+    
+    return result.rows;
+  } catch (error) {
+    console.error('Error obteniendo proyectos por emprendedor:', error);
+    throw error;
   }
+}
   
   // Buscar proyectos
   static async search(queryText, categoria = null, limit = 20, offset = 0) {
@@ -149,26 +149,26 @@ class Project {
   }
   
   // Obtener proyectos destacados
-  static async getFeatured(limit = 6) {
-    try {
-      const result = await db.query(  // ✅ Cambiado: db.query
-        `SELECT p.*, u.nombre as nombre_emprendedor,
-                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
-                EXTRACT(DAY FROM (p.fecha_limite - CURRENT_DATE)) as dias_restantes
-         FROM proyectos p
-         JOIN usuarios u ON p.id_emprendedor = u.id
-         WHERE p.estado = 'activo' AND p.fecha_limite > CURRENT_DATE
-         ORDER BY p.fondos_recaudados DESC, p.investors_count DESC
-         LIMIT $1`,
-        [limit]
-      );
-      
-      return result.rows;
-    } catch (error) {
-      console.error('Error obteniendo proyectos destacados:', error);
-      throw error;
-    }
+static async getFeatured(limit = 6) {
+  try {
+    const result = await db.query(
+      `SELECT p.*, u.nombre as nombre_emprendedor,
+              (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+              EXTRACT(DAY FROM (TO_TIMESTAMP(p.fecha_limite) - CURRENT_DATE)) as dias_restantes
+       FROM proyectos p
+       JOIN usuarios u ON p.id_emprendedor = u.id
+       WHERE p.estado = 'activo' AND TO_TIMESTAMP(p.fecha_limite) > CURRENT_DATE
+       ORDER BY p.fondos_recaudados DESC, p.investors_count DESC
+       LIMIT $1`,
+      [limit]
+    );
+    
+    return result.rows;
+  } catch (error) {
+    console.error('Error obteniendo proyectos destacados:', error);
+    throw error;
   }
+}
   
   // Actualizar proyecto
   static async update(projectId, updateData) {

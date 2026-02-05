@@ -18,7 +18,7 @@ router.get('/global', async (req, res) => {
       FROM usuarios 
       WHERE estado = 'activo'
     `);
-    
+
     // Obtener estadísticas de proyectos
     const projectsStats = await query(`
       SELECT 
@@ -31,7 +31,7 @@ router.get('/global', async (req, res) => {
         COALESCE(SUM(meta_financiera), 0) as total_meta
       FROM proyectos
     `);
-    
+
     // Obtener estadísticas de inversiones
     const investmentsStats = await query(`
       SELECT 
@@ -43,21 +43,21 @@ router.get('/global', async (req, res) => {
       FROM inversiones
       WHERE estado = 'activa'
     `);
-    
+
     // Proyectos destacados
     const featuredProjects = await query(`
-      SELECT p.id, p.titulo, p.descripcion, p.meta_financiera, p.fondos_recaudados,
-             p.categoria, p.fecha_limite, p.estado, p.imagen_url,
-             u.nombre as nombre_emprendedor,
-             (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
-             EXTRACT(DAY FROM (p.fecha_limite - CURRENT_DATE)) as dias_restantes
-      FROM proyectos p
-      JOIN usuarios u ON p.id_emprendedor = u.id
-      WHERE p.estado = 'activo' AND p.fecha_limite > CURRENT_DATE
-      ORDER BY (p.fondos_recaudados / p.meta_financiera) DESC, p.investors_count DESC
-      LIMIT 6
-    `);
-    
+  SELECT p.id, p.titulo, p.descripcion, p.meta_financiera, p.fondos_recaudados,
+         p.categoria, p.fecha_limite, p.estado, p.imagen_url,
+         u.nombre as nombre_emprendedor,
+         (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+         EXTRACT(DAY FROM (TO_TIMESTAMP(p.fecha_limite) - CURRENT_DATE)) as dias_restantes
+  FROM proyectos p
+  JOIN usuarios u ON p.id_emprendedor = u.id
+  WHERE p.estado = 'activo' AND TO_TIMESTAMP(p.fecha_limite) > CURRENT_DATE
+  ORDER BY (p.fondos_recaudados / p.meta_financiera) DESC, p.investors_count DESC
+  LIMIT 6
+`);
+
     // Inversiones recientes
     const recentInvestments = await query(`
       SELECT i.monto, i.fecha_inversion,
@@ -71,7 +71,7 @@ router.get('/global', async (req, res) => {
       ORDER BY i.fecha_inversion DESC
       LIMIT 5
     `);
-    
+
     // Categorías más populares
     const popularCategories = await query(`
       SELECT categoria, COUNT(*) as total_proyectos,
@@ -82,7 +82,7 @@ router.get('/global', async (req, res) => {
       ORDER BY total_recaudado DESC
       LIMIT 5
     `);
-    
+
     res.json({
       success: true,
       data: {
@@ -95,7 +95,7 @@ router.get('/global', async (req, res) => {
         timestamp: new Date().toISOString()
       }
     });
-    
+
   } catch (error) {
     console.error('Error obteniendo estadísticas globales:', error);
     res.status(500).json({
@@ -109,7 +109,7 @@ router.get('/global', async (req, res) => {
 router.get('/realtime', async (req, res) => {
   try {
     const hoy = new Date().toISOString().split('T')[0];
-    
+
     // Inversiones hoy
     const todayStats = await query(`
       SELECT 
@@ -118,21 +118,21 @@ router.get('/realtime', async (req, res) => {
       FROM inversiones 
       WHERE DATE(fecha_inversion) = $1
     `, [hoy]);
-    
+
     // Nuevos usuarios hoy
     const newUsers = await query(`
       SELECT COUNT(*) as nuevos_usuarios_hoy
       FROM usuarios 
       WHERE DATE(fecha_registro) = $1
     `, [hoy]);
-    
+
     // Nuevos proyectos hoy
     const newProjects = await query(`
       SELECT COUNT(*) as nuevos_proyectos_hoy
       FROM proyectos 
       WHERE DATE(fecha_creacion) = $1
     `, [hoy]);
-    
+
     // Proyectos que expiran pronto (en 7 días)
     const expiring = await query(`
       SELECT COUNT(*) as proyectos_por_expiracion
@@ -140,7 +140,7 @@ router.get('/realtime', async (req, res) => {
       WHERE estado = 'activo' 
       AND fecha_limite <= CURRENT_DATE + INTERVAL '7 days'
     `);
-    
+
     // Proyectos casi completados (>80%)
     const almostCompleted = await query(`
       SELECT COUNT(*) as proyectos_casi_completados
@@ -149,7 +149,7 @@ router.get('/realtime', async (req, res) => {
       AND (fondos_recaudados / meta_financiera * 100) >= 80
       AND (fondos_recaudados / meta_financiera * 100) < 100
     `);
-    
+
     res.json({
       success: true,
       data: {
@@ -165,12 +165,12 @@ router.get('/realtime', async (req, res) => {
         timestamp: new Date().toISOString()
       }
     });
-    
+
   } catch (error) {
     console.error('Error estadísticas tiempo real:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Error servidor' 
+    res.status(500).json({
+      success: false,
+      error: 'Error servidor'
     });
   }
 });
