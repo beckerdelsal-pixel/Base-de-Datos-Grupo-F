@@ -18,12 +18,9 @@ services:
         value: 3000
     healthCheckPath: /health
     autoDeploy: true
-    domains:
-      - crowdfunding-app.onrender.com
 
 databases:
   - name: crowdfunding-db
     databaseName: crowdfunding
     user: crowdfunding_user
     plan: free
-    ipAllowList: []

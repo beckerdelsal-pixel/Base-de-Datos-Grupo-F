@@ -38,7 +38,7 @@ router.get('/emprendedor', authenticate, async (req, res) => {
     let inversionesRecientes = [];
     try {
       // Esto depende de cómo tengas tu modelo Investment
-      // inversionesRecientes = await Investment.findRecentByEntrepreneur(req.user.id);
+      inversionesRecientes = await Investment.findRecentByEntrepreneur(req.user.id);
     } catch (e) {
       console.warn('No se pudieron obtener inversiones:', e.message);
     }

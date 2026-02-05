@@ -30,52 +30,44 @@
         </div>
 
         <div class="dashboard-grid perfil-emprendedor">
-            <!-- Las estadísticas se cargarán dinámicamente aquí -->
-        </div>
+            </div>
 
         <div id="seccion-nuevo-proyecto" style="display:none;" class="tarjeta-form wide">
             <h2>Detalles del Proyecto</h2>
-            <div class="campo">
-                <label for="nombre-p">Nombre del Proyecto *</label>
-                <input type="text" id="nombre-p" placeholder="Ej. Dron de Rescate Solar" required>
-            </div>
-            <div class="campo">
-                <label for="meta-p">Meta de Financiación ($) *</label>
-                <input type="number" id="meta-p" placeholder="5000" min="100" max="1000000" required>
-                <small style="color: #6B7280; font-size: 12px;">Mínimo $100 - Máximo $1,000,000</small>
-            </div>
-            <div class="campo">
-                <label for="desc-p">Descripción *</label>
-                <textarea id="desc-p" rows="4" placeholder="Describe tu proyecto en detalle... (mínimo 50 caracteres)" required></textarea>
-            </div>
-            <div class="campo">
-                <label for="categoria-p">Categoría</label>
-                <select id="categoria-p">
-                    <option value="tecnologia">Tecnología</option>
-                    <option value="ecologia">Ecología</option>
-                    <option value="salud">Salud</option>
-                    <option value="educacion">Educación</option>
-                    <option value="arte">Arte</option>
-                    <option value="otros">Otros</option>
-                </select>
-            </div>
-            <div class="campo">
-                <label for="dias-p">Fecha Límite (días desde hoy)</label>
-                <select id="dias-p">
-                    <option value="30">30 días</option>
-                    <option value="60">60 días</option>
-                    <option value="90">90 días</option>
-                    <option value="120">120 días</option>
-                </select>
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button type="button" class="boton-primario" onclick="publicarProyecto()">Publicar Proyecto</button>
-                <button type="button" class="btn-secundario" onclick="ocultarFormularioProyecto()">Cancelar</button>
-            </div>
+            <form id="form-crear-proyecto">
+                <div class="campo">
+                    <label for="proj-nombre">Nombre del Proyecto *</label>
+                    <input type="text" id="proj-nombre" placeholder="Ej. Dron de Rescate Solar" required>
+                </div>
+                <div class="campo">
+                    <label for="proj-meta">Meta de Financiación ($) *</label>
+                    <input type="number" id="proj-meta" placeholder="5000" min="100" max="1000000" required>
+                    <small style="color: #6B7280; font-size: 12px;">Mínimo $100 - Máximo $1,000,000</small>
+                </div>
+                <div class="campo">
+                    <label for="proj-descripcion">Descripción *</label>
+                    <textarea id="proj-descripcion" rows="4" placeholder="Describe tu proyecto en detalle..." required></textarea>
+                </div>
+                <div class="campo">
+                    <label for="proj-categoria">Categoría</label>
+                    <select id="proj-categoria">
+                        <option value="Tecnología">Tecnología</option>
+                        <option value="Ecología">Ecología</option>
+                        <option value="Salud">Salud</option>
+                        <option value="Educación">Educación</option>
+                        <option value="Arte">Arte</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="boton-primario">Publicar Proyecto</button>
+                    <button type="button" class="btn-secundario" onclick="ocultarFormularioProyecto()">Cancelar</button>
+                </div>
+            </form>
         </div>
 
-        <div class="lista-proyectos">
-            <!-- Los proyectos se cargarán dinámicamente aquí -->
+        <div id="contenedor-proyectos" class="lista-proyectos">
+            <p>Cargando proyectos desde la base de datos...</p>
         </div>
         
         <div style="margin-top: 40px; text-align: center;">
@@ -85,8 +77,19 @@
 
     <script src="actividad.js"></script>
     <script>
-        // Estas funciones están definidas en actividad.js
-        // Solo se mantienen aquí para compatibilidad con el HTML original
+        // Funciones visuales simples para el panel
+        function mostrarFormularioProyecto() {
+            document.getElementById('seccion-nuevo-proyecto').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function ocultarFormularioProyecto() {
+            document.getElementById('seccion-nuevo-proyecto').style.display = 'none';
+        }
+        
+        // Quitar el loader cuando cargue la página
+        window.addEventListener('load', () => {
+            document.getElementById('loader-wrapper').style.display = 'none';
+        });
     </script>
 </body>
 

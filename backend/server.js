@@ -1,126 +1,86 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const { Pool } = require('pg');
 const helmet = require('helmet');
 const compression = require('compression');
-const path = require('path');
-const { initDatabase } = require('./config/database');
-const dashboardRoutes = require('./routes/dashboard');
-app.use('/api/dashboard', dashboardRoutes);
-
-// Importar rutas
-const authRoutes = require('./routes/auth');
-const projectRoutes = require('./routes/projects');
-const dashboardRoutes = require('./routes/dashboard');
-const statsRoutes = require('./routes/stats');
-
-// Importar middleware de mantenimiento
-require('./utils/maintenance');
+require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Inicializar base de datos
-initDatabase();
+// Configuración de Base de Datos
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
-// Middlewares de seguridad y performance
-app.use(helmet({
-  contentSecurityPolicy: false, // Desactivar para desarrollo, ajustar para producción
-}));
+// Middleware
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(compression());
-const corsOptions = {
-  origin: [
-    'https://crowdfunding-app-qkjm.onrender.com',
-    'http://localhost:3000',
-    'http://localhost:5000'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin']
-};
+app.use(cors());
+app.use(express.json());
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // IMPORTANTE para preflight requests
-
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Servir archivos estáticos del frontend
+// --- LA CLAVE ESTÁ AQUÍ ---
+// Servir archivos desde la carpeta hermana 'frontend'
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Rutas API
-app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/stats', statsRoutes);
+// RUTA PARA CREAR UN NUEVO PROYECTO
+app.post('/api/proyectos', async (req, res) => {
+    // Extraemos los datos que vienen desde el frontend
+    const { emprendedor_id, nombre, descripcion, meta, categoria } = req.body;
 
-// Health check endpoint (crítico para Render)
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    service: 'crowdfunding-backend',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
-  });
+    // Validación básica
+    if (!nombre || !meta) {
+        return res.status(400).json({ error: 'Nombre y Meta son obligatorios' });
+    }
+
+    try {
+        const query = `
+            INSERT INTO proyectos (emprendedor_id, nombre, descripcion, meta, actual, categoria)
+            VALUES ($1, $2, $3, $4, 0, $5)
+            RETURNING *;
+        `;
+        
+        const values = [emprendedor_id || null, nombre, descripcion, meta, categoria];
+        const result = await pool.query(query, values);
+
+        // Devolvemos el proyecto recién creado
+        res.status(201).json(result.rows[0]);
+        
+    } catch (err) {
+        console.error('Error al insertar proyecto:', err);
+        res.status(500).json({ error: 'Error interno del servidor al guardar el proyecto' });
+    }
 });
 
-// Ruta para verificar la API
-app.get('/api/status', (req, res) => {
-  res.json({
-    success: true,
-    message: 'API de Crowdfunding funcionando',
-    version: '1.0.0',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Ruta catch-all para SPA (Single Page Application)
-app.get('*', (req, res) => {
-  // Si es una ruta de API, devolver 404
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({
-      success: false,
-      error: 'Ruta API no encontrada'
+// Rutas de API
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    // Simulación de respuesta para pruebas rápidas
+    res.json({ 
+        token: 'abc-123', 
+        user: { nombre: 'Usuario Prueba', rol: email.includes('inv') ? 'inversionista' : 'emprendedor' } 
     });
-  }
-  
-  // Para cualquier otra ruta, servir el index.html del frontend
-  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
-// Middleware de manejo de errores
-app.use((err, req, res, next) => {
-  console.error('Error global:', err.stack);
-  
-  const statusCode = err.statusCode || 500;
-  const message = process.env.NODE_ENV === 'production' 
-    ? 'Algo salió mal en el servidor' 
-    : err.message;
-  
-  res.status(statusCode).json({
-    success: false,
-    error: message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-  });
+app.get('/api/proyectos', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM proyectos ORDER BY id DESC');
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error en DB' });
+    }
 });
 
-const PORT = process.env.PORT || 3000;
-const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost';
+// Ruta de Salud
+app.get('/health', (req, res) => res.status(200).send('OK'));
 
-app.listen(PORT, HOST, () => {
-  console.log(`
-  🚀 Servidor Crowdfunding iniciado
-  📍 Host: ${HOST}
-  🔌 Puerto: ${PORT}
-  🌐 Entorno: ${process.env.NODE_ENV || 'development'}
-  ⏰ Hora: ${new Date().toLocaleString()}
-  `);
-  
-  if (process.env.NODE_ENV === 'production') {
-    console.log('✅ Aplicación lista en la nube');
-  } else {
-    console.log(`📱 Frontend: http://localhost:${PORT}`);
-    console.log(`🔧 API: http://localhost:${PORT}/api/status`);
-  }
+// Redireccionar cualquier otra ruta al index.html del frontend
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
-module.exports = app; 
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo y buscando frontend en ../frontend`);
+});

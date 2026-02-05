@@ -1,36 +1,20 @@
 {
-  "name": "crowdfunding-backend",
+  "name": "crowdboost-backend",
   "version": "1.0.0",
-  "description": "Backend para sistema de crowdfunding en la nube",
+  "description": "Backend para sistema de crowdfunding",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "migrate": "node -e \"require('./config/database').initDatabase()\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js"
   },
-  "keywords": ["crowdfunding", "nodejs", "postgresql", "render"],
-  "author": "Tu Nombre",
-  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.3",
-    "express-validator": "^7.0.1",
     "helmet": "^7.0.0",
     "compression": "^1.7.4",
-    "multer": "^1.4.5-lts.1",
-    "node-cron": "^3.0.3",
-    "nodemailer": "^6.9.7",
-    "uuid": "^9.0.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3"
   }
 }
