@@ -2,6 +2,15 @@
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 const API_URL = isLocal ? 'http://localhost:3000/api' : `${window.location.origin}/api`;
 
+// Forzar desaparición del loader si tarda más de 3 segundos
+setTimeout(() => {
+    const loader = document.getElementById('loader-wrapper');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 500);
+    }
+}, 3000);
+
 // --- 2. FUNCIONES DE AUTENTICACIÓN ---
 async function iniciarSesion(e) {
     if (e) e.preventDefault();
@@ -63,34 +72,31 @@ async function crearProyecto(e) {
 
 // Cargar y mostrar proyectos en el Dashboard
 async function cargarProyectos() {
+    console.log("Intentando cargar proyectos..."); // Para ver en consola
     const contenedor = document.getElementById('contenedor-proyectos');
-    if (!contenedor) return; // Si no estamos en un dashboard, salir
+    const loader = document.getElementById('loader-wrapper');
 
     try {
         const response = await fetch(`${API_URL}/proyectos`);
         const proyectos = await response.json();
+        console.log("Proyectos recibidos:", proyectos);
 
-        contenedor.innerHTML = ''; // Limpiar cargando...
-        
-        proyectos.forEach(p => {
-            const porcentaje = Math.min((p.actual / p.meta) * 100, 100).toFixed(1);
-            contenedor.innerHTML += `
-                <div class="proyecto-card">
-                    <h3>${p.nombre}</h3>
-                    <p>${p.descripcion}</p>
-                    <div class="meta-info">
-                        <span>Meta: $${p.meta}</span>
-                        <span>Progreso: ${porcentaje}%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${porcentaje}%"></div>
-                    </div>
-                    <button class="btn-invertir">Ver Detalles</button>
-                </div>
-            `;
-        });
-    } catch (err) { 
-        contenedor.innerHTML = '<p>Error al cargar proyectos.</p>';
+        if (contenedor) {
+            if (proyectos.length === 0) {
+                contenedor.innerHTML = '<p>No hay proyectos disponibles aún.</p>';
+            } else {
+                contenedor.innerHTML = ''; // Limpiar
+                proyectos.forEach(p => {
+                    // ... tu código actual para crear las cards ...
+                    contenedor.innerHTML += `<div class="card"><h3>${p.nombre}</h3></div>`; 
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Error al cargar:", err);
+    } finally {
+        // ESTO ES LO MÁS IMPORTANTE: El loader se quita sí o sí, falle o funcione
+        if (loader) loader.style.display = 'none';
     }
 }
 
@@ -114,4 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (userDisplay && localStorage.getItem('userName')) {
         userDisplay.textContent = `Hola, ${localStorage.getItem('userName')}`;
     }
+
+    setTimeout(() => {
+    const loader = document.getElementById('loader-wrapper');
+    if (loader) loader.style.display = 'none';
+}, 5000);
 });

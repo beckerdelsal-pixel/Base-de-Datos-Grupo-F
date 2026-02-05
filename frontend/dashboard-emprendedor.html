@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <title>Panel Emprendedor - CrowdBoost</title>
     <link rel="stylesheet" href="estilos.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
 </head>
 
 <body class="bg-dashboard">
@@ -18,7 +19,8 @@
         <div class="menu_contenedor">
             <span class="user-name">Hola, Emprendedor 🚀</span>
             <div style="display: flex; gap: 10px;">
-                <a href="index.html" class="boton-enlace" onclick="event.preventDefault(); cerrarSesion();">Cerrar Sesión</a>
+                <a href="index.html" class="boton-enlace" onclick="event.preventDefault(); cerrarSesion();">Cerrar
+                    Sesión</a>
             </div>
         </div>
     </nav>
@@ -30,7 +32,7 @@
         </div>
 
         <div class="dashboard-grid perfil-emprendedor">
-            </div>
+        </div>
 
         <div id="seccion-nuevo-proyecto" style="display:none;" class="tarjeta-form wide">
             <h2>Detalles del Proyecto</h2>
@@ -46,7 +48,8 @@
                 </div>
                 <div class="campo">
                     <label for="proj-descripcion">Descripción *</label>
-                    <textarea id="proj-descripcion" rows="4" placeholder="Describe tu proyecto en detalle..." required></textarea>
+                    <textarea id="proj-descripcion" rows="4" placeholder="Describe tu proyecto en detalle..."
+                        required></textarea>
                 </div>
                 <div class="campo">
                     <label for="proj-categoria">Categoría</label>
@@ -69,7 +72,7 @@
         <div id="contenedor-proyectos" class="lista-proyectos">
             <p>Cargando proyectos desde la base de datos...</p>
         </div>
-        
+
         <div style="margin-top: 40px; text-align: center;">
             <a href="index.html" class="boton-enlace">← Volver a la página principal</a>
         </div>
@@ -77,19 +80,21 @@
 
     <script src="actividad.js"></script>
     <script>
-        // Funciones visuales simples para el panel
+        // Quitar el loader apenas el DOM esté listo, no esperes a las imágenes
+        document.addEventListener('DOMContentLoaded', () => {
+            // Damos un pequeño margen para que se vea la animación
+            setTimeout(() => {
+                const loader = document.getElementById('loader-wrapper');
+                if (loader) loader.style.display = 'none';
+            }, 1000);
+        });
+
         function mostrarFormularioProyecto() {
             document.getElementById('seccion-nuevo-proyecto').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         function ocultarFormularioProyecto() {
             document.getElementById('seccion-nuevo-proyecto').style.display = 'none';
         }
-        
-        // Quitar el loader cuando cargue la página
-        window.addEventListener('load', () => {
-            document.getElementById('loader-wrapper').style.display = 'none';
-        });
     </script>
 </body>
 
