@@ -169,6 +169,21 @@ app.post('/api/proyectos/invertir', async (req, res) => {
     }
 });
 
+// Obtener proyectos de un emprendedor específico
+app.get('/api/proyectos/usuario/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query(
+            'SELECT * FROM proyectos WHERE emprendedor_id = $1 ORDER BY id DESC',
+            [userId]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al obtener tus proyectos' });
+    }
+});
+
 app.get('/api/usuarios/:id/inversiones', async (req, res) => {
     try {
         const query = `

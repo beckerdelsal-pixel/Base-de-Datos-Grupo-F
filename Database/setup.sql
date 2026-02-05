@@ -41,7 +41,9 @@ INSERT INTO usuarios (nombre, email, password, rol)
 VALUES ('Usuario de Prueba', 'test@test.com', '123456', 'emprendedor');
 
 
-CREATE TABLE IF NOT EXISTS inversiones (
+DROP TABLE IF EXISTS inversiones;
+
+CREATE TABLE inversiones (
     id SERIAL PRIMARY KEY,
     usuario_id INTEGER REFERENCES usuarios(id),
     proyecto_id INTEGER REFERENCES proyectos(id),
@@ -50,3 +52,5 @@ CREATE TABLE IF NOT EXISTS inversiones (
 );
 
 select * from inversiones;
+
+

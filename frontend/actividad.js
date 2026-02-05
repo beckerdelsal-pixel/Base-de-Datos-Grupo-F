@@ -275,12 +275,21 @@ async function cargarMisInversiones() {
 async function crearProyecto(e) {
     if (e) e.preventDefault();
 
+    const userId = localStorage.getItem('userId');
+    
+    // Validación de seguridad: Si no hay ID, no permitimos el envío
+    if (!userId) {
+        alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+        window.location.href = 'login.html';
+        return;
+    }
+
     const proyecto = {
         nombre: document.getElementById('proj-nombre').value,
         descripcion: document.getElementById('proj-descripcion').value,
         meta: parseFloat(document.getElementById('proj-meta').value),
         categoria: document.getElementById('proj-categoria').value,
-        emprendedor_id: localStorage.getItem('userId') || 1 // Usar ID real del login
+        emprendedor_id: userId // Ahora usamos el ID real obligatoriamente
     };
 
     try {
@@ -292,76 +301,77 @@ async function crearProyecto(e) {
 
         if (response.ok) {
             alert('¡Proyecto publicado con éxito! 🎉');
-            window.location.href = 'dashboard-emprendedor.html'; // Recargar para ver cambios
+            // En lugar de redireccionar, podemos simplemente ocultar el formulario 
+            // y recargar la lista para que la experiencia sea más fluida
+            ocultarFormularioProyecto(); 
+            cargarProyectos(); 
+            document.getElementById('form-crear-proyecto').reset(); // Limpia los campos
         } else {
-            alert('No se pudo guardar el proyecto.');
+            const data = await response.json();
+            alert('Error: ' + (data.error || 'No se pudo guardar el proyecto.'));
         }
-    } catch (err) { alert('Error al conectar con el servidor'); }
+    } catch (err) { 
+        console.error(err);
+        alert('Error al conectar con el servidor'); 
+    }
 }
 
 // Cargar y mostrar proyectos en el Dashboard
 // MEJORA EN CARGAR PROYECTOS (Vista Inversionista vs Emprendedor)
 async function cargarProyectos() {
-    // Ajustado al ID de tu HTML: 'proyectos-recomendados-container'
-    const contenedor = document.getElementById('proyectos-recomendados-container');
+    const contenedorInv = document.getElementById('proyectos-recomendados-container');
+    const contenedorEmp = document.getElementById('contenedor-proyectos');
+    const contenedor = contenedorInv || contenedorEmp;
     if (!contenedor) return;
 
+    const userId = localStorage.getItem('userId');
+    const esInversionista = window.location.href.includes('dashboard-inversionista');
+    
+    // Si es emprendedor, usamos la nueva ruta filtrada; si no, la general
+    const urlBusqueda = (!esInversionista && userId) 
+        ? `${API_URL}/proyectos/usuario/${userId}` 
+        : `${API_URL}/proyectos`;
+
     try {
-        console.log("Cargando proyectos desde el servidor...");
-        const response = await fetch(`${API_URL}/proyectos`);
+        const response = await fetch(urlBusqueda);
         const proyectos = await response.json();
 
         contenedor.innerHTML = '';
 
         if (proyectos.length === 0) {
-            contenedor.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">
-                    <p>No hay proyectos activos en este momento. ¡Vuelve más tarde!</p>
-                </div>`;
+            contenedor.innerHTML = `<p style="text-align:center; padding:20px; color:#666;">
+                ${esInversionista ? 'No hay proyectos disponibles.' : 'Aún no has creado proyectos.'}
+            </p>`;
             return;
         }
 
         proyectos.forEach(p => {
-            // Cálculo del porcentaje para la barra de progreso
             const porcentaje = Math.min((p.actual / p.meta) * 100, 100).toFixed(1);
 
-            // Detectamos si estamos en el dashboard del inversionista para mostrar el botón
-            const esInversionista = window.location.href.includes('dashboard-inversionista');
-
-            // Inyectamos el HTML con las clases de tu estilos.css
             contenedor.innerHTML += `
                 <div class="tarjeta-proyecto-dash">
                     <div class="proyecto-info">
                         <span class="tag-categoria">${p.categoria || 'Innovación'}</span>
                         <h4>${p.nombre}</h4>
-                        <p>${p.descripcion.length > 120 ? p.descripcion.substring(0, 120) + '...' : p.descripcion}</p>
+                        <p>${p.descripcion.substring(0, 100)}...</p>
                     </div>
-                    
                     <div class="proyecto-stats">
                         <div class="barra-progreso-bg">
                             <div class="barra-progreso-fill" style="width: ${porcentaje}%"></div>
                         </div>
                         <div class="stats-numeros">
                             <span><strong>${porcentaje}%</strong> financiado</span>
-                            <span>Meta: <strong>$${p.meta}</strong></span>
+                            <span>Meta: $${p.meta}</span>
                         </div>
-                        <p style="font-size: 0.85rem; color: #555; margin-top: 5px;">
-                            Recaudado: $${p.actual}
-                        </p>
                     </div>
-
-                    ${esInversionista ?
-                    `<button onclick="invertir(${p.id})" class="boton-invertir-mini" style="width: 100%; margin-top: 15px;">
-                            💰 Invertir ahora
-                        </button>`
-                    : ''
-                }
-                </div>
-            `;
+                    ${esInversionista ? 
+                        `<button onclick="invertir(${p.id})" class="boton-invertir-mini">💰 Invertir</button>` : 
+                        `<div class="tag-rol-propio">Recaudado: $${p.actual}</div>`
+                    }
+                </div>`;
         });
     } catch (err) {
         console.error("Error cargando proyectos:", err);
-        contenedor.innerHTML = '<p style="text-align:center; color:red;">Error al conectar con el servidor.</p>';
     }
 }
 
@@ -409,5 +419,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('contenedor-estadisticas')) {
         cargarEstadisticas();
         cargarMisInversiones();
+    }
+    if (document.getElementById('contenedor-proyectos')) {
+        cargarProyectos();
     }
 });
