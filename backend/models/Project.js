@@ -1,10 +1,10 @@
-const { query } = require('../config/database');
+const db = require('../config/database');  // ✅ Nueva forma
 
 class Project {
   // Crear nuevo proyecto
   static async create(projectData) {
     try {
-      const result = await query(
+      const result = await db.query(  // ✅ Cambiado: db.query
         `INSERT INTO proyectos 
          (id_emprendedor, titulo, descripcion, meta_financiera, fecha_limite, categoria, tags) 
          VALUES ($1, $2, $3, $4, $5, $6, $7) 
@@ -30,7 +30,7 @@ class Project {
   // Obtener proyecto por ID
   static async findById(id) {
     try {
-      const result = await query(
+      const result = await db.query(  // ✅ Cambiado: db.query
         `SELECT p.*, u.nombre as nombre_emprendedor, u.avatar_url as avatar_emprendedor,
                 u.biografia as biografia_emprendedor
          FROM proyectos p
@@ -49,7 +49,7 @@ class Project {
   // Obtener todos los proyectos activos
   static async findAllActive(limit = 20, offset = 0) {
     try {
-      const result = await query(
+      const result = await db.query(  // ✅ Cambiado: db.query
         `SELECT p.*, u.nombre as nombre_emprendedor,
                 (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
                 EXTRACT(DAY FROM (p.fecha_limite - CURRENT_DATE)) as dias_restantes
@@ -71,7 +71,7 @@ class Project {
   // Obtener proyectos por emprendedor
   static async findByEntrepreneur(emprendedorId) {
     try {
-      const result = await query(
+      const result = await db.query(  // ✅ Cambiado: db.query
         `SELECT p.*, 
                 (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
                 EXTRACT(DAY FROM (p.fecha_limite - CURRENT_DATE)) as dias_restantes
@@ -112,7 +112,7 @@ class Project {
       sql += ` ORDER BY p.fecha_creacion DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
       params.push(limit, offset);
       
-      const result = await query(sql, params);
+      const result = await db.query(sql, params);  // ✅ Cambiado: db.query
       return result.rows;
     } catch (error) {
       console.error('Error buscando proyectos:', error);
@@ -123,7 +123,7 @@ class Project {
   // Actualizar fondos recaudados
   static async updateFunds(projectId, amount) {
     try {
-      const result = await query(
+      const result = await db.query(  // ✅ Cambiado: db.query
         `UPDATE proyectos 
          SET fondos_recaudados = fondos_recaudados + $1,
              investors_count = investors_count + 1
@@ -135,7 +135,7 @@ class Project {
       // Verificar si se completó la meta
       const project = result.rows[0];
       if (project.fondos_recaudados >= project.meta_financiera) {
-        await query(
+        await db.query(  // ✅ Cambiado: db.query
           "UPDATE proyectos SET estado = 'completado' WHERE id = $1",
           [projectId]
         );
@@ -151,7 +151,7 @@ class Project {
   // Obtener proyectos destacados
   static async getFeatured(limit = 6) {
     try {
-      const result = await query(
+      const result = await db.query(  // ✅ Cambiado: db.query
         `SELECT p.*, u.nombre as nombre_emprendedor,
                 (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
                 EXTRACT(DAY FROM (p.fecha_limite - CURRENT_DATE)) as dias_restantes
@@ -191,7 +191,7 @@ class Project {
       
       values.push(projectId);
       
-      const result = await query(
+      const result = await db.query(  // ✅ Cambiado: db.query
         `UPDATE proyectos SET ${updates.join(', ')} 
          WHERE id = $${paramCount} 
          RETURNING *`,
@@ -211,7 +211,7 @@ class Project {
   // Eliminar proyecto (cambiar estado)
   static async delete(projectId, emprendedorId) {
     try {
-      const result = await query(
+      const result = await db.query(  // ✅ Cambiado: db.query
         `UPDATE proyectos SET estado = 'cancelado' 
          WHERE id = $1 AND id_emprendedor = $2
          RETURNING id`,
@@ -228,7 +228,7 @@ class Project {
   // Obtener inversiones del proyecto
   static async getInvestments(projectId) {
     try {
-      const result = await query(
+      const result = await db.query(  // ✅ Cambiado: db.query
         `SELECT i.*, u.nombre as nombre_inversor, u.avatar_url as avatar_inversor
          FROM inversiones i
          JOIN usuarios u ON i.id_inversor = u.id
@@ -247,7 +247,7 @@ class Project {
   // Obtener estadísticas globales
   static async getGlobalStats() {
     try {
-      const result = await query(`
+      const result = await db.query(`  // ✅ Cambiado: db.query
         SELECT 
           COUNT(*) as total_proyectos,
           COUNT(CASE WHEN estado = 'completado' THEN 1 END) as proyectos_financiados,

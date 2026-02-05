@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
-const emailService = require('../utils/emailService');
+//const emailService = require('../utils/emailService');
 
 // Middleware de validación para registro
 const validateRegister = [
@@ -70,12 +70,12 @@ router.post('/register', validateRegister, async (req, res) => {
     await User.updateLastLogin(user.id);
     
     // Enviar email de bienvenida (en segundo plano)
-    try {
-      emailService.sendWelcomeEmail(user);
-    } catch (emailError) {
-      console.error('Error enviando email de bienvenida:', emailError);
+    //try {
+    //  emailService.sendWelcomeEmail(user);
+    //} catch (emailError) {
+    //  console.error('Error enviando email de bienvenida:', emailError);
       // No fallar el registro por error en email
-    }
+    //}
     
     res.status(201).json({
       success: true,
