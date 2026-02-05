@@ -1,178 +1,189 @@
-const express = require('express');
+import express from 'express';
+import { query } from '../db/db.js';
+
 const router = express.Router();
-const User = require('../models/User');
-const Project = require('../models/Project');
-const Investment = require('../models/Investment');
-const { query } = require('../config/database');
 
-// ESTADÍSTICAS GLOBALES
-router.get('/global', async (req, res) => {
+// Función auxiliar para convertir fechas (maneja tanto DATE como INTEGER timestamps)
+const convertDateField = (field) => {
+  return `CASE 
+    WHEN pg_typeof(${field}) = 'integer'::regtype 
+    THEN TO_TIMESTAMP(${field}::double precision)
+    ELSE ${field}::timestamp 
+  END`;
+};
+
+// GET /api/stats - Obtener estadísticas globales
+router.get('/', async (req, res) => {
   try {
-    // Obtener estadísticas de usuarios
-    const usersStats = await query(`
+    console.log('📊 Solicitando estadísticas globales...');
+
+    // 1. Estadísticas básicas (en paralelo para mejor performance)
+    const [
+      totalUsuarios,
+      totalProyectos,
+      totalInversiones,
+      totalFondos,
+      proyectosActivos
+    ] = await Promise.all([
+      query('SELECT COUNT(*) FROM usuarios'),
+      query('SELECT COUNT(*) FROM proyectos'),
+      query('SELECT COUNT(*) FROM inversiones'),
+      query('SELECT COALESCE(SUM(fondos_recaudados), 0) as sum FROM proyectos'),
+      query("SELECT COUNT(*) FROM proyectos WHERE estado = 'activo'")
+    ]);
+
+    // 2. Estadísticas mensuales (CORREGIDO - maneja diferentes tipos de fecha)
+    const monthlyStats = await query(`
+      WITH all_dates AS (
+        SELECT fecha_creacion as fecha FROM usuarios WHERE fecha_creacion IS NOT NULL
+        UNION ALL
+        SELECT fecha_creacion as fecha FROM proyectos WHERE fecha_creacion IS NOT NULL
+        UNION ALL
+        SELECT fecha as fecha FROM inversiones WHERE fecha IS NOT NULL
+      )
       SELECT 
-        COUNT(*) as total_usuarios,
-        COUNT(CASE WHEN tipo_usuario = 'emprendedor' THEN 1 END) as total_emprendedores,
-        COUNT(CASE WHEN tipo_usuario = 'inversor' THEN 1 END) as total_inversores,
-        COALESCE(SUM(saldo), 0) as capital_total
-      FROM usuarios 
-      WHERE estado = 'activo'
+        EXTRACT(YEAR FROM ${convertDateField('fecha')}) as year,
+        EXTRACT(MONTH FROM ${convertDateField('fecha')}) as month,
+        COUNT(*) as count
+      FROM all_dates
+      GROUP BY 
+        EXTRACT(YEAR FROM ${convertDateField('fecha')}), 
+        EXTRACT(MONTH FROM ${convertDateField('fecha')})
+      ORDER BY year DESC, month DESC
+      LIMIT 12
     `);
 
-    // Obtener estadísticas de proyectos
-    const projectsStats = await query(`
+    // 3. Crecimiento por categoría (CORREGIDO)
+    const categoryGrowth = await query(`
       SELECT 
-        COUNT(*) as total_proyectos,
-        COUNT(CASE WHEN estado = 'completado' THEN 1 END) as proyectos_financiados,
-        COUNT(CASE WHEN estado = 'activo' THEN 1 END) as proyectos_activos,
-        COUNT(CASE WHEN estado = 'expirado' THEN 1 END) as proyectos_expirados,
-        COALESCE(SUM(fondos_recaudados), 0) as capital_movilizado,
-        COALESCE(AVG(fondos_recaudados), 0) as promedio_recaudacion,
-        COALESCE(SUM(meta_financiera), 0) as total_meta
-      FROM proyectos
+        p.categoria,
+        EXTRACT(YEAR FROM ${convertDateField('p.fecha_creacion')}) as year,
+        EXTRACT(MONTH FROM ${convertDateField('p.fecha_creacion')}) as month,
+        COUNT(*) as proyectos,
+        COALESCE(SUM(p.meta_financiera), 0) as meta_total,
+        COALESCE(SUM(p.fondos_recaudados), 0) as recaudado_total,
+        ROUND(COALESCE(SUM(p.fondos_recaudados) / NULLIF(SUM(p.meta_financiera), 0) * 100, 0), 2) as porcentaje_promedio
+      FROM proyectos p
+      WHERE p.categoria IS NOT NULL 
+        AND p.fecha_creacion IS NOT NULL
+      GROUP BY 
+        p.categoria, 
+        EXTRACT(YEAR FROM ${convertDateField('p.fecha_creacion')}), 
+        EXTRACT(MONTH FROM ${convertDateField('p.fecha_creacion')})
+      ORDER BY year DESC, month DESC, proyectos DESC
+      LIMIT 20
     `);
 
-    // Obtener estadísticas de inversiones
-    const investmentsStats = await query(`
-      SELECT 
-        COUNT(*) as total_inversiones,
-        COALESCE(SUM(monto), 0) as total_invertido,
-        COALESCE(AVG(monto), 0) as promedio_inversion,
-        COUNT(DISTINCT id_inversor) as inversores_unicos,
-        COUNT(DISTINCT id_proyecto) as proyectos_invertidos
-      FROM inversiones
-      WHERE estado = 'activa'
+    // 4. Top inversores
+    const topInvestors = await query(`
+      SELECT u.id, u.nombre, u.email, u.imagen_url,
+             COUNT(i.id) as inversiones_count,
+             COALESCE(SUM(i.monto), 0) as total_invertido,
+             ROUND(COALESCE(AVG(i.monto), 0), 2) as promedio_inversion
+      FROM usuarios u
+      LEFT JOIN inversiones i ON u.id = i.id_inversor
+      GROUP BY u.id, u.nombre, u.email, u.imagen_url
+      HAVING COUNT(i.id) > 0
+      ORDER BY total_invertido DESC
+      LIMIT 10
     `);
 
-    // Proyectos destacados
+    // 5. Proyectos destacados (CORREGIDO)
     const featuredProjects = await query(`
-  SELECT p.id, p.titulo, p.descripcion, p.meta_financiera, p.fondos_recaudados,
-         p.categoria, p.fecha_limite, p.estado, p.imagen_url,
-         u.nombre as nombre_emprendedor,
-         (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
-         EXTRACT(DAY FROM (TO_TIMESTAMP(p.fecha_limite) - CURRENT_DATE)) as dias_restantes
-  FROM proyectos p
-  JOIN usuarios u ON p.id_emprendedor = u.id
-  WHERE p.estado = 'activo' AND TO_TIMESTAMP(p.fecha_limite) > CURRENT_DATE
-  ORDER BY (p.fondos_recaudados / p.meta_financiera) DESC, p.investors_count DESC
-  LIMIT 6
-`);
-
-    // Inversiones recientes
-    const recentInvestments = await query(`
-      SELECT i.monto, i.fecha_inversion,
-             p.titulo as proyecto_titulo,
-             u_inv.nombre as inversor_nombre,
-             u_emp.nombre as emprendedor_nombre
-      FROM inversiones i
-      JOIN proyectos p ON i.id_proyecto = p.id
-      JOIN usuarios u_inv ON i.id_inversor = u_inv.id
-      JOIN usuarios u_emp ON p.id_emprendedor = u_emp.id
-      ORDER BY i.fecha_inversion DESC
-      LIMIT 5
+      SELECT p.id, p.titulo, p.descripcion, p.meta_financiera, p.fondos_recaudados,
+             p.categoria, p.fecha_limite, p.estado, p.imagen_url,
+             u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+             ROUND((p.fondos_recaudados / NULLIF(p.meta_financiera, 0) * 100), 2) as porcentaje_completado,
+             GREATEST(EXTRACT(DAY FROM (p.fecha_limite::DATE - CURRENT_DATE)), 0) as dias_restantes,
+             p.investors_count, p.views_count
+      FROM proyectos p
+      JOIN usuarios u ON p.id_emprendedor = u.id
+      WHERE p.estado = 'activo' 
+        AND p.fecha_limite::DATE > CURRENT_DATE
+        AND p.meta_financiera > 0
+      ORDER BY (p.fondos_recaudados / p.meta_financiera) DESC, 
+               p.investors_count DESC, 
+               p.views_count DESC
+      LIMIT 6
     `);
 
-    // Categorías más populares
-    const popularCategories = await query(`
-      SELECT categoria, COUNT(*) as total_proyectos,
-             SUM(fondos_recaudados) as total_recaudado
-      FROM proyectos
-      WHERE categoria IS NOT NULL AND categoria != ''
-      GROUP BY categoria
-      ORDER BY total_recaudado DESC
-      LIMIT 5
-    `);
-
-    res.json({
-      success: true,
-      data: {
-        usuarios: usersStats.rows[0],
-        proyectos: projectsStats.rows[0],
-        inversiones: investmentsStats.rows[0],
-        destacados: featuredProjects.rows,
-        recientes: recentInvestments.rows,
-        categorias_populares: popularCategories.rows,
-        timestamp: new Date().toISOString()
-      }
-    });
-
-  } catch (error) {
-    console.error('Error obteniendo estadísticas globales:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error obteniendo estadísticas'
-    });
-  }
-});
-
-// ESTADÍSTICAS EN TIEMPO REAL
-router.get('/realtime', async (req, res) => {
-  try {
-    const hoy = new Date().toISOString().split('T')[0];
-
-    // Inversiones hoy
-    const todayStats = await query(`
+    // 6. Distribución de estados
+    const statusDistribution = await query(`
       SELECT 
-        COUNT(*) as inversiones_hoy,
-        COALESCE(SUM(monto), 0) as monto_hoy
-      FROM inversiones 
-      WHERE DATE(fecha_inversion) = $1
-    `, [hoy]);
-
-    // Nuevos usuarios hoy
-    const newUsers = await query(`
-      SELECT COUNT(*) as nuevos_usuarios_hoy
-      FROM usuarios 
-      WHERE DATE(fecha_registro) = $1
-    `, [hoy]);
-
-    // Nuevos proyectos hoy
-    const newProjects = await query(`
-      SELECT COUNT(*) as nuevos_proyectos_hoy
-      FROM proyectos 
-      WHERE DATE(fecha_creacion) = $1
-    `, [hoy]);
-
-    // Proyectos que expiran pronto (en 7 días)
-    const expiring = await query(`
-      SELECT COUNT(*) as proyectos_por_expiracion
-      FROM proyectos 
-      WHERE estado = 'activo' 
-      AND fecha_limite <= CURRENT_DATE + INTERVAL '7 days'
+        estado, 
+        COUNT(*) as count,
+        ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM proyectos), 2) as porcentaje
+      FROM proyectos
+      GROUP BY estado
+      ORDER BY count DESC
     `);
 
-    // Proyectos casi completados (>80%)
-    const almostCompleted = await query(`
-      SELECT COUNT(*) as proyectos_casi_completados
-      FROM proyectos 
-      WHERE estado = 'activo'
-      AND (fondos_recaudados / meta_financiera * 100) >= 80
-      AND (fondos_recaudados / meta_financiera * 100) < 100
+    // 7. Métricas financieras adicionales
+    const financialMetrics = await query(`
+      SELECT 
+        COUNT(*) as proyectos_financiados,
+        COALESCE(SUM(CASE WHEN fondos_recaudados >= meta_financiera THEN 1 ELSE 0 END), 0) as proyectos_exitosos,
+        ROUND(COALESCE(AVG(fondos_recaudados / NULLIF(meta_financiera, 0) * 100), 0), 2) as porcentaje_promedio_financiacion,
+        COALESCE(SUM(fondos_recaudados), 0) as total_recaudado_todos,
+        COALESCE(SUM(meta_financiera), 0) as total_meta_todos
+      FROM proyectos
+      WHERE estado IN ('activo', 'completado')
     `);
 
-    res.json({
-      success: true,
-      data: {
-        hoy: {
-          ...todayStats.rows[0],
-          ...newUsers.rows[0],
-          ...newProjects.rows[0]
-        },
-        alertas: {
-          ...expiring.rows[0],
-          ...almostCompleted.rows[0]
-        },
-        timestamp: new Date().toISOString()
-      }
-    });
+    // Formatear respuesta
+    const stats = {
+      totals: {
+        usuarios: parseInt(totalUsuarios.rows[0].count) || 0,
+        proyectos: parseInt(totalProyectos.rows[0].count) || 0,
+        inversiones: parseInt(totalInversiones.rows[0].count) || 0,
+        fondos: parseFloat(totalFondos.rows[0].sum) || 0,
+        activos: parseInt(proyectosActivos.rows[0].count) || 0
+      },
+      financial: financialMetrics.rows[0],
+      monthlyStats: monthlyStats.rows,
+      categoryGrowth: categoryGrowth.rows,
+      topInvestors: topInvestors.rows,
+      featuredProjects: featuredProjects.rows,
+      statusDistribution: statusDistribution.rows,
+      updatedAt: new Date().toISOString(),
+      timestamp: Date.now()
+    };
+
+    console.log('✅ Estadísticas generadas exitosamente');
+    res.json(stats);
 
   } catch (error) {
-    console.error('Error estadísticas tiempo real:', error);
-    res.status(500).json({
+    console.error('❌ Error obteniendo estadísticas globales:', error);
+    
+    // Respuesta de error más detallada
+    res.status(500).json({ 
       success: false,
-      error: 'Error servidor'
+      error: 'Error obteniendo estadísticas globales',
+      message: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });
 
-module.exports = router;
+// GET /api/stats/health - Health check para estadísticas
+router.get('/health', async (req, res) => {
+  try {
+    const dbCheck = await query('SELECT 1 as ok');
+    const proyectosCount = await query('SELECT COUNT(*) as count FROM proyectos');
+    
+    res.json({
+      status: 'healthy',
+      database: dbCheck.rows[0].ok === 1 ? 'connected' : 'error',
+      proyectos: parseInt(proyectosCount.rows[0].count) || 0,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+export default router;

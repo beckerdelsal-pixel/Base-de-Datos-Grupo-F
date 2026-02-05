@@ -1,23 +1,26 @@
-const db = require('../config/database');  // ✅ Nueva forma
+import { query } from '../db/db.js';
 
 class Project {
   // Crear nuevo proyecto
   static async create(projectData) {
     try {
-      const result = await db.query(  // ✅ Cambiado: db.query
+      const {
+        id_emprendedor,
+        titulo,
+        descripcion,
+        meta_financiera,
+        fecha_limite,
+        categoria,
+        imagen_url,
+        tags
+      } = projectData;
+
+      const result = await query(
         `INSERT INTO proyectos 
-         (id_emprendedor, titulo, descripcion, meta_financiera, fecha_limite, categoria, tags) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7) 
+         (id_emprendedor, titulo, descripcion, meta_financiera, fecha_limite, categoria, imagen_url, tags)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
-        [
-          projectData.id_emprendedor,
-          projectData.titulo,
-          projectData.descripcion,
-          projectData.meta_financiera,
-          projectData.fecha_limite,
-          projectData.categoria || 'general',
-          projectData.tags || ''
-        ]
+        [id_emprendedor, titulo, descripcion, meta_financiera, fecha_limite, categoria, imagen_url, tags]
       );
       
       return result.rows[0];
@@ -26,120 +29,213 @@ class Project {
       throw error;
     }
   }
-  
+
   // Obtener proyecto por ID
   static async findById(id) {
     try {
-      const result = await db.query(  // ✅ Cambiado: db.query
-        `SELECT p.*, u.nombre as nombre_emprendedor, u.avatar_url as avatar_emprendedor,
-                u.biografia as biografia_emprendedor
+      const result = await query(
+        `SELECT p.*, u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+                EXTRACT(DAY FROM (p.fecha_limite::DATE - CURRENT_DATE)) as dias_restantes
          FROM proyectos p
          JOIN usuarios u ON p.id_emprendedor = u.id
          WHERE p.id = $1`,
         [id]
       );
       
-      return result.rows[0] || null;
+      return result.rows[0];
     } catch (error) {
-      console.error('Error obteniendo proyecto:', error);
+      console.error('Error obteniendo proyecto por ID:', error);
       throw error;
     }
   }
-  
+
   // Obtener todos los proyectos activos
-static async findAllActive(limit = 20, offset = 0) {
-  try {
-    const result = await db.query(
-      `SELECT p.*, u.nombre as nombre_emprendedor,
-              (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
-              EXTRACT(DAY FROM (TO_TIMESTAMP(p.fecha_limite) - CURRENT_DATE)) as dias_restantes
-       FROM proyectos p
-       JOIN usuarios u ON p.id_emprendedor = u.id
-       WHERE p.estado = 'activo' AND TO_TIMESTAMP(p.fecha_limite) > CURRENT_DATE
-       ORDER BY p.fecha_creacion DESC
-       LIMIT $1 OFFSET $2`,
-      [limit, offset]
-    );
-    
-    return result.rows;
-  } catch (error) {
-    console.error('Error obteniendo proyectos activos:', error);
-    throw error;
-  }
-}
-  
-  // Obtener proyectos por emprendedor
-static async findByEntrepreneur(emprendedorId) {
-  try {
-    const result = await db.query(
-      `SELECT p.*, 
-              (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
-              EXTRACT(DAY FROM (TO_TIMESTAMP(p.fecha_limite) - CURRENT_DATE)) as dias_restantes
-       FROM proyectos p
-       WHERE p.id_emprendedor = $1
-       ORDER BY p.fecha_creacion DESC`,
-      [emprendedorId]
-    );
-    
-    return result.rows;
-  } catch (error) {
-    console.error('Error obteniendo proyectos por emprendedor:', error);
-    throw error;
-  }
-}
-  
-  // Buscar proyectos
-  static async search(queryText, categoria = null, limit = 20, offset = 0) {
+  static async findAllActive(limit = 20, offset = 0) {
     try {
-      let sql = `
-        SELECT p.*, u.nombre as nombre_emprendedor,
-               (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado
-        FROM proyectos p
-        JOIN usuarios u ON p.id_emprendedor = u.id
-        WHERE p.estado = 'activo' 
-          AND (p.titulo ILIKE $1 OR p.descripcion ILIKE $1 OR p.tags ILIKE $1)
-      `;
+      const result = await query(
+        `SELECT p.*, u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+                EXTRACT(DAY FROM (p.fecha_limite::DATE - CURRENT_DATE)) as dias_restantes
+         FROM proyectos p
+         JOIN usuarios u ON p.id_emprendedor = u.id
+         WHERE p.estado = 'activo' AND p.fecha_limite::DATE > CURRENT_DATE
+         ORDER BY p.fecha_creacion DESC
+         LIMIT $1 OFFSET $2`,
+        [limit, offset]
+      );
       
-      const params = [`%${queryText}%`];
-      let paramCount = 2;
-      
-      if (categoria) {
-        sql += ` AND p.categoria = $${paramCount}`;
-        params.push(categoria);
-        paramCount++;
-      }
-      
-      sql += ` ORDER BY p.fecha_creacion DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
-      params.push(limit, offset);
-      
-      const result = await db.query(sql, params);  // ✅ Cambiado: db.query
       return result.rows;
     } catch (error) {
-      console.error('Error buscando proyectos:', error);
+      console.error('Error obteniendo proyectos activos:', error);
       throw error;
     }
   }
-  
-  // Actualizar fondos recaudados
-  static async updateFunds(projectId, amount) {
+
+  // Obtener proyectos por categoría
+  static async findByCategory(categoria, limit = 20, offset = 0) {
     try {
-      const result = await db.query(  // ✅ Cambiado: db.query
+      const result = await query(
+        `SELECT p.*, u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+                EXTRACT(DAY FROM (p.fecha_limite::DATE - CURRENT_DATE)) as dias_restantes
+         FROM proyectos p
+         JOIN usuarios u ON p.id_emprendedor = u.id
+         WHERE p.categoria = $1 AND p.estado = 'activo' AND p.fecha_limite::DATE > CURRENT_DATE
+         ORDER BY p.fecha_creacion DESC
+         LIMIT $2 OFFSET $3`,
+        [categoria, limit, offset]
+      );
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Error obteniendo proyectos por categoría:', error);
+      throw error;
+    }
+  }
+
+  // Obtener proyectos por emprendedor
+  static async findByEntrepreneur(emprendedorId) {
+    try {
+      const result = await query(
+        `SELECT p.*, u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+                EXTRACT(DAY FROM (p.fecha_limite::DATE - CURRENT_DATE)) as dias_restantes
+         FROM proyectos p
+         JOIN usuarios u ON p.id_emprendedor = u.id
+         WHERE p.id_emprendedor = $1
+         ORDER BY p.fecha_creacion DESC`,
+        [emprendedorId]
+      );
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Error obteniendo proyectos por emprendedor:', error);
+      throw error;
+    }
+  }
+
+  // Obtener proyectos destacados
+  static async getFeatured(limit = 6) {
+    try {
+      const result = await query(
+        `SELECT p.*, u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+                EXTRACT(DAY FROM (p.fecha_limite::DATE - CURRENT_DATE)) as dias_restantes
+         FROM proyectos p
+         JOIN usuarios u ON p.id_emprendedor = u.id
+         WHERE p.estado = 'activo' AND p.fecha_limite::DATE > CURRENT_DATE
+         ORDER BY p.fondos_recaudados DESC, p.investors_count DESC
+         LIMIT $1`,
+        [limit]
+      );
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Error obteniendo proyectos destacados:', error);
+      throw error;
+    }
+  }
+
+  // Obtener proyectos populares (más visitados)
+  static async getPopular(limit = 6) {
+    try {
+      const result = await query(
+        `SELECT p.*, u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+                EXTRACT(DAY FROM (p.fecha_limite::DATE - CURRENT_DATE)) as dias_restantes
+         FROM proyectos p
+         JOIN usuarios u ON p.id_emprendedor = u.id
+         WHERE p.estado = 'activo' AND p.fecha_limite::DATE > CURRENT_DATE
+         ORDER BY p.views_count DESC, p.investors_count DESC
+         LIMIT $1`,
+        [limit]
+      );
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Error obteniendo proyectos populares:', error);
+      throw error;
+    }
+  }
+
+  // Actualizar proyecto
+  static async update(id, updateData) {
+    try {
+      const fields = [];
+      const values = [];
+      let paramCount = 1;
+
+      for (const [key, value] of Object.entries(updateData)) {
+        fields.push(`${key} = $${paramCount}`);
+        values.push(value);
+        paramCount++;
+      }
+
+      values.push(id);
+
+      const result = await query(
+        `UPDATE proyectos 
+         SET ${fields.join(', ')} 
+         WHERE id = $${paramCount}
+         RETURNING *`,
+        values
+      );
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error actualizando proyecto:', error);
+      throw error;
+    }
+  }
+
+  // Eliminar proyecto (soft delete)
+  static async delete(id) {
+    try {
+      const result = await query(
+        `UPDATE proyectos 
+         SET estado = 'cancelado'
+         WHERE id = $1
+         RETURNING *`,
+        [id]
+      );
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error eliminando proyecto:', error);
+      throw error;
+    }
+  }
+
+  // Incrementar contador de vistas
+  static async incrementViews(id) {
+    try {
+      const result = await query(
+        `UPDATE proyectos 
+         SET views_count = views_count + 1 
+         WHERE id = $1
+         RETURNING *`,
+        [id]
+      );
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error incrementando vistas:', error);
+      throw error;
+    }
+  }
+
+  // Actualizar fondos recaudados
+  static async updateFunds(id, amount) {
+    try {
+      const result = await query(
         `UPDATE proyectos 
          SET fondos_recaudados = fondos_recaudados + $1,
              investors_count = investors_count + 1
          WHERE id = $2
-         RETURNING fondos_recaudados, meta_financiera`,
-        [amount, projectId]
+         RETURNING *`,
+        [amount, id]
       );
-      
-      // Verificar si se completó la meta
-      const project = result.rows[0];
-      if (project.fondos_recaudados >= project.meta_financiera) {
-        await db.query(  // ✅ Cambiado: db.query
-          "UPDATE proyectos SET estado = 'completado' WHERE id = $1",
-          [projectId]
-        );
-      }
       
       return result.rows[0];
     } catch (error) {
@@ -147,122 +243,103 @@ static async findByEntrepreneur(emprendedorId) {
       throw error;
     }
   }
-  
-  // Obtener proyectos destacados
-static async getFeatured(limit = 6) {
-  try {
-    const result = await db.query(
-      `SELECT p.*, u.nombre as nombre_emprendedor,
-              (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
-              EXTRACT(DAY FROM (TO_TIMESTAMP(p.fecha_limite) - CURRENT_DATE)) as dias_restantes
-       FROM proyectos p
-       JOIN usuarios u ON p.id_emprendedor = u.id
-       WHERE p.estado = 'activo' AND TO_TIMESTAMP(p.fecha_limite) > CURRENT_DATE
-       ORDER BY p.fondos_recaudados DESC, p.investors_count DESC
-       LIMIT $1`,
-      [limit]
-    );
-    
-    return result.rows;
-  } catch (error) {
-    console.error('Error obteniendo proyectos destacados:', error);
-    throw error;
-  }
-}
-  
-  // Actualizar proyecto
-  static async update(projectId, updateData) {
+
+  // Buscar proyectos
+  static async search(queryText, limit = 20, offset = 0) {
     try {
-      const updates = [];
-      const values = [];
-      let paramCount = 1;
-      
-      for (const [key, value] of Object.entries(updateData)) {
-        if (value !== undefined && value !== null) {
-          updates.push(`${key} = $${paramCount}`);
-          values.push(value);
-          paramCount++;
-        }
-      }
-      
-      if (updates.length === 0) {
-        return { success: false, message: 'No hay datos para actualizar' };
-      }
-      
-      values.push(projectId);
-      
-      const result = await db.query(  // ✅ Cambiado: db.query
-        `UPDATE proyectos SET ${updates.join(', ')} 
-         WHERE id = $${paramCount} 
-         RETURNING *`,
-        values
-      );
-      
-      return {
-        success: true,
-        project: result.rows[0]
-      };
-    } catch (error) {
-      console.error('Error actualizando proyecto:', error);
-      throw error;
-    }
-  }
-  
-  // Eliminar proyecto (cambiar estado)
-  static async delete(projectId, emprendedorId) {
-    try {
-      const result = await db.query(  // ✅ Cambiado: db.query
-        `UPDATE proyectos SET estado = 'cancelado' 
-         WHERE id = $1 AND id_emprendedor = $2
-         RETURNING id`,
-        [projectId, emprendedorId]
-      );
-      
-      return result.rows.length > 0;
-    } catch (error) {
-      console.error('Error eliminando proyecto:', error);
-      throw error;
-    }
-  }
-  
-  // Obtener inversiones del proyecto
-  static async getInvestments(projectId) {
-    try {
-      const result = await db.query(  // ✅ Cambiado: db.query
-        `SELECT i.*, u.nombre as nombre_inversor, u.avatar_url as avatar_inversor
-         FROM inversiones i
-         JOIN usuarios u ON i.id_inversor = u.id
-         WHERE i.id_proyecto = $1
-         ORDER BY i.fecha_inversion DESC`,
-        [projectId]
+      const result = await query(
+        `SELECT p.*, u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+                EXTRACT(DAY FROM (p.fecha_limite::DATE - CURRENT_DATE)) as dias_restantes
+         FROM proyectos p
+         JOIN usuarios u ON p.id_emprendedor = u.id
+         WHERE (p.titulo ILIKE $1 OR p.descripcion ILIKE $1 OR p.tags ILIKE $1)
+           AND p.estado = 'activo' AND p.fecha_limite::DATE > CURRENT_DATE
+         ORDER BY p.fecha_creacion DESC
+         LIMIT $2 OFFSET $3`,
+        [`%${queryText}%`, limit, offset]
       );
       
       return result.rows;
     } catch (error) {
-      console.error('Error obteniendo inversiones:', error);
+      console.error('Error buscando proyectos:', error);
       throw error;
     }
   }
-  
-  // Obtener estadísticas globales
-  static async getGlobalStats() {
+
+  // Obtener proyectos próximos a expirar
+  static async getExpiringSoon(limit = 10) {
     try {
-      const result = await db.query(`  // ✅ Cambiado: db.query
-        SELECT 
-          COUNT(*) as total_proyectos,
-          COUNT(CASE WHEN estado = 'completado' THEN 1 END) as proyectos_financiados,
-          COUNT(CASE WHEN estado = 'activo' THEN 1 END) as proyectos_activos,
-          SUM(fondos_recaudados) as capital_movilizado,
-          AVG(fondos_recaudados) as promedio_recaudacion
-        FROM proyectos
-      `);
+      const result = await query(
+        `SELECT p.*, u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado,
+                EXTRACT(DAY FROM (p.fecha_limite::DATE - CURRENT_DATE)) as dias_restantes
+         FROM proyectos p
+         JOIN usuarios u ON p.id_emprendedor = u.id
+         WHERE p.estado = 'activo' 
+           AND p.fecha_limite::DATE > CURRENT_DATE
+           AND p.fecha_limite::DATE <= CURRENT_DATE + INTERVAL '7 days'
+         ORDER BY p.fecha_limite ASC
+         LIMIT $1`,
+        [limit]
+      );
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Error obteniendo proyectos próximos a expirar:', error);
+      throw error;
+    }
+  }
+
+  // Obtener proyectos exitosos (completados)
+  static async getSuccessful(limit = 10) {
+    try {
+      const result = await query(
+        `SELECT p.*, u.nombre as nombre_emprendedor, u.imagen_url as imagen_emprendedor,
+                (p.fondos_recaudados / p.meta_financiera * 100) as porcentaje_completado
+         FROM proyectos p
+         JOIN usuarios u ON p.id_emprendedor = u.id
+         WHERE p.estado = 'completado'
+         ORDER BY p.fondos_recaudados DESC
+         LIMIT $1`,
+        [limit]
+      );
+      
+      return result.rows;
+    } catch (error) {
+      console.error('Error obteniendo proyectos exitosos:', error);
+      throw error;
+    }
+  }
+
+  // Obtener estadísticas de proyecto
+  static async getProjectStats(id) {
+    try {
+      const result = await query(
+        `SELECT 
+           p.*,
+           u.nombre as nombre_emprendedor,
+           u.email as email_emprendedor,
+           u.imagen_url as imagen_emprendedor,
+           COUNT(DISTINCT i.id) as total_inversores,
+           COUNT(DISTINCT up.id) as total_updates,
+           AVG(i.monto) as promedio_inversion,
+           MAX(i.monto) as mayor_inversion
+         FROM proyectos p
+         JOIN usuarios u ON p.id_emprendedor = u.id
+         LEFT JOIN inversiones i ON p.id = i.id_proyecto
+         LEFT JOIN updates up ON p.id = up.id_proyecto
+         WHERE p.id = $1
+         GROUP BY p.id, u.nombre, u.email, u.imagen_url`,
+        [id]
+      );
       
       return result.rows[0];
     } catch (error) {
-      console.error('Error obteniendo estadísticas globales:', error);
+      console.error('Error obteniendo estadísticas de proyecto:', error);
       throw error;
     }
   }
 }
 
-module.exports = Project;
+export default Project;
