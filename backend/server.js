@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 3000;
 
 // Configuración de Base de Datos
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
 });
 
 // Middleware
@@ -54,9 +54,9 @@ app.post('/api/auth/login', async (req, res) => {
 
         if (result.rows.length > 0) {
             const user = result.rows[0];
-            res.json({ 
+            res.json({
                 token: 'sesion-activa-' + user.id, // Token temporal
-                user: user 
+                user: user
             });
         } else {
             res.status(401).json({ message: 'Correo o contraseña incorrectos' });
@@ -93,6 +93,72 @@ app.get('/api/proyectos', async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: 'Error en DB' });
+    }
+});
+
+// Obtener datos de un usuario específico (incluyendo saldo)
+app.get('/api/usuarios/:id', async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT id, nombre, email, rol, saldo FROM usuarios WHERE id = $1',
+            [req.params.id]
+        );
+        if (result.rows.length > 0) {
+            res.json(result.rows[0]);
+        } else {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Error al consultar usuario' });
+    }
+});
+
+// RUTA PARA ACTUALIZAR SALDO
+app.put('/api/usuarios/saldo', async (req, res) => {
+    const { userId, monto } = req.body;
+    try {
+        const query = `
+            UPDATE usuarios 
+            SET saldo = COALESCE(saldo, 0) + $1 
+            WHERE id = $2 
+            RETURNING saldo;
+        `;
+        const result = await pool.query(query, [parseFloat(monto), userId]);
+
+        if (result.rows.length > 0) {
+            res.json({ nuevoSaldo: result.rows[0].saldo });
+        } else {
+            res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error al actualizar saldo' });
+    }
+});
+
+// --- RUTA 2: INVERTIR EN PROYECTO (La nueva, para mover dinero entre tablas) ---
+app.post('/api/proyectos/invertir', async (req, res) => {
+    const { userId, proyectoId, monto } = req.body;
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        // Restar saldo (solo si tiene suficiente)
+        const resUser = await client.query(
+            'UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2 AND saldo >= $1 RETURNING saldo',
+            [monto, userId]
+        );
+        if (resUser.rows.length === 0) throw new Error('Saldo insuficiente');
+
+        // Sumar al proyecto
+        await client.query('UPDATE proyectos SET actual = actual + $1 WHERE id = $2', [monto, proyectoId]);
+
+        await client.query('COMMIT');
+        res.json({ mensaje: 'Inversión exitosa', nuevoSaldo: resUser.rows[0].saldo });
+    } catch (err) {
+        await client.query('ROLLBACK');
+        res.status(400).json({ error: err.message });
+    } finally {
+        client.release();
     }
 });
 
