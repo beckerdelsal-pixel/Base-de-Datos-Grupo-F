@@ -12,27 +12,97 @@ setTimeout(() => {
 }, 3000);
 
 // --- 2. FUNCIONES DE AUTENTICACIÓN ---
-async function iniciarSesion(e) {
+
+// REGISTRO
+async function registrarUsuario(e) {
     if (e) e.preventDefault();
-    const email = document.getElementById('correo').value;
-    const password = document.getElementById('contraseña').value;
+    console.log("Iniciando proceso de registro...");
+
+    // 1. Capturamos los valores de texto
+    const nombre = document.getElementById('reg-nombre').value;
+    const email = document.getElementById('reg-correo').value;
+    const password = document.getElementById('reg-contraseña').value;
+
+    // 2. Capturamos el valor del Radio Button seleccionado (rol)
+    const radioSeleccionado = document.querySelector('input[name="tipo_usuario"]:checked');
+    const rol = radioSeleccionado ? radioSeleccionado.value : null;
+
+    if (!rol) {
+        alert("Por favor, selecciona si eres Inversionista o Emprendedor.");
+        return;
+    }
 
     try {
+        console.log("Enviando datos de registro:", { nombre, email, rol });
+        
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, email, password, rol })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('¡Registro exitoso! Ahora puedes iniciar sesión.');
+            window.location.href = 'login.html';
+        } else {
+            alert('Error en el registro: ' + (data.message || 'Datos inválidos'));
+        }
+    } catch (err) {
+        console.error('Error de conexión:', err);
+        alert('No se pudo conectar con el servidor.');
+    }
+}
+
+async function iniciarSesion(e) {
+    if (e) e.preventDefault();
+    console.log("Iniciando proceso de login...");
+
+    // Verificamos que los elementos existan antes de leer su valor
+    const inputEmail = document.getElementById('correo');
+    const inputPass = document.getElementById('contraseña');
+
+    if (!inputEmail || !inputPass) {
+        console.error("ERROR: No se encontraron los campos 'correo' o 'contraseña' en el HTML.");
+        alert("Error interno: Los IDs del formulario no coinciden.");
+        return;
+    }
+
+    const email = inputEmail.value;
+    const password = inputPass.value;
+
+    try {
+        console.log("Enviando petición a:", `${API_URL}/auth/login`);
         const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
+
         const data = await response.json();
+        console.log("Respuesta del servidor:", data);
+
         if (response.ok) {
             localStorage.setItem('token', data.token);
             localStorage.setItem('userName', data.user.nombre);
-            localStorage.setItem('userId', data.user.id || 1); // Guardamos el ID del usuario
-            window.location.href = data.user.rol === 'inversionista' ? 'dashboard-inversionista.html' : 'dashboard-emprendedor.html';
+            localStorage.setItem('userId', data.user.id);
+            
+            console.log("Login exitoso. Redirigiendo a:", data.user.rol);
+            
+            // Redirección
+            if (data.user.rol === 'inversionista') {
+                window.location.href = 'dashboard-inversionista.html';
+            } else {
+                window.location.href = 'dashboard-emprendedor.html';
+            }
         } else {
-            alert('Error: ' + data.message);
+            alert('Error: ' + (data.message || 'Credenciales incorrectas'));
         }
-    } catch (err) { alert('Error de conexión con el servidor'); }
+    } catch (err) {
+        console.error('Error total en el fetch:', err);
+        alert('Error de conexión con el servidor. Revisa los logs de Render.');
+    }
 }
 
 function cerrarSesion() {

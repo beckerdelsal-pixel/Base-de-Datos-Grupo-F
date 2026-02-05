@@ -21,19 +21,57 @@ app.use(compression());
 app.use(cors());
 app.use(express.json());
 
-// --- LA CLAVE ESTÁ AQUÍ ---
-// Servir archivos desde la carpeta hermana 'frontend'
+// Servir archivos estáticos
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// RUTA PARA CREAR UN NUEVO PROYECTO
-app.post('/api/proyectos', async (req, res) => {
-    // Extraemos los datos que vienen desde el frontend
-    const { emprendedor_id, nombre, descripcion, meta, categoria } = req.body;
+// --- RUTAS DE AUTENTICACIÓN ---
 
-    // Validación básica
-    if (!nombre || !meta) {
-        return res.status(400).json({ error: 'Nombre y Meta son obligatorios' });
+// REGISTRO REAL
+app.post('/api/auth/register', async (req, res) => {
+    const { nombre, email, password, rol } = req.body;
+    try {
+        const query = `
+            INSERT INTO usuarios (nombre, email, password, rol)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, nombre, email, rol;
+        `;
+        const values = [nombre, email, password, rol];
+        const result = await pool.query(query, values);
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error('Error en registro:', err);
+        res.status(500).json({ error: 'El correo ya existe o hubo un error en la base de datos' });
     }
+});
+
+// LOGIN REAL
+app.post('/api/auth/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        // Buscamos al usuario por email y password
+        const query = 'SELECT id, nombre, email, rol FROM usuarios WHERE email = $1 AND password = $2';
+        const result = await pool.query(query, [email, password]);
+
+        if (result.rows.length > 0) {
+            const user = result.rows[0];
+            res.json({ 
+                token: 'sesion-activa-' + user.id, // Token temporal
+                user: user 
+            });
+        } else {
+            res.status(401).json({ message: 'Correo o contraseña incorrectos' });
+        }
+    } catch (err) {
+        console.error('Error en login:', err);
+        res.status(500).json({ error: 'Error en el servidor' });
+    }
+});
+
+// --- RUTAS DE PROYECTOS ---
+
+app.post('/api/proyectos', async (req, res) => {
+    const { emprendedor_id, nombre, descripcion, meta, categoria } = req.body;
+    if (!nombre || !meta) return res.status(400).json({ error: 'Datos incompletos' });
 
     try {
         const query = `
@@ -41,27 +79,12 @@ app.post('/api/proyectos', async (req, res) => {
             VALUES ($1, $2, $3, $4, 0, $5)
             RETURNING *;
         `;
-        
         const values = [emprendedor_id || null, nombre, descripcion, meta, categoria];
         const result = await pool.query(query, values);
-
-        // Devolvemos el proyecto recién creado
         res.status(201).json(result.rows[0]);
-        
     } catch (err) {
-        console.error('Error al insertar proyecto:', err);
-        res.status(500).json({ error: 'Error interno del servidor al guardar el proyecto' });
+        res.status(500).json({ error: 'Error al guardar proyecto' });
     }
-});
-
-// Rutas de API
-app.post('/api/auth/login', async (req, res) => {
-    const { email, password } = req.body;
-    // Simulación de respuesta para pruebas rápidas
-    res.json({ 
-        token: 'abc-123', 
-        user: { nombre: 'Usuario Prueba', rol: email.includes('inv') ? 'inversionista' : 'emprendedor' } 
-    });
 });
 
 app.get('/api/proyectos', async (req, res) => {
@@ -73,14 +96,13 @@ app.get('/api/proyectos', async (req, res) => {
     }
 });
 
-// Ruta de Salud
+// Ruta de Salud y Redirección
 app.get('/health', (req, res) => res.status(200).send('OK'));
 
-// Redireccionar cualquier otra ruta al index.html del frontend
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo y buscando frontend en ../frontend`);
+    console.log(`🚀 Servidor en puerto ${PORT}`);
 });
