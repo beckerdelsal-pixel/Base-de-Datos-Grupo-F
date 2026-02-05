@@ -24,27 +24,19 @@ app.use(helmet({
   contentSecurityPolicy: false, // Desactivar para desarrollo, ajustar para producción
 }));
 app.use(compression());
-app.use(cors({
-  origin: function(origin, callback) {
-    // Permitir todos los orígenes en desarrollo
-    if (!origin || process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    
-    // En producción, permitir solo dominios específicos
-    const allowedOrigins = [
-      'https://crowdfunding-app.onrender.com',
-      'https://crowdfunding-app-qkjm.onrender.com', // Cambia esto por tu dominio
-    ];
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('No permitido por CORS'));
-    }
-  },
-  credentials: true
-}));
+const corsOptions = {
+  origin: [
+    'https://crowdfunding-app-qkjm.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:5000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // IMPORTANTE para preflight requests
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
