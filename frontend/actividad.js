@@ -555,30 +555,66 @@ async function cargarDashboardEmprendedor() {
     if (!verificarAutenticacion()) return;
     
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+        showNotification('❌ Sesión expirada', 'error');
+        window.location.href = 'login.html';
+        return;
+    }
     
     mostrarLoader();
     
     try {
+        console.log('🔍 Solicitando dashboard emprendedor...');
         const response = await fetch(`${API_URL}/dashboard/emprendedor`, {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
+        
+        console.log('📊 Status:', response.status);
+        
+        // Si es 404, el endpoint no existe
+        if (response.status === 404) {
+            showNotification('⚠️ Dashboard no disponible temporalmente', 'warning');
+            
+            // Cargar datos de prueba o redirigir
+            const datosMock = {
+                success: true,
+                data: {
+                    usuario: { nombre: 'Usuario Demo' },
+                    estadisticas: { totalProyectos: 0, proyectosActivos: 0 },
+                    proyectos: []
+                }
+            };
+            actualizarDashboardEmprendedor(datosMock.data);
+            return;
+        }
+        
+        // Si es 403, no es emprendedor
+        if (response.status === 403) {
+            showNotification('🔁 Redirigiendo a dashboard de inversionista...', 'info');
+            setTimeout(() => {
+                window.location.href = 'dashboard-inversionista.html';
+            }, 1500);
+            return;
+        }
+        
+        // Si es 500, error del servidor
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
         const data = await response.json();
         
         if (data.success) {
             actualizarDashboardEmprendedor(data.data);
         } else {
-            showNotification('❌ Error cargando dashboard', 'error');
-            if (data.error === 'Acceso solo para emprendedores') {
-                window.location.href = 'dashboard-inversionista.html';
-            }
+            showNotification('❌ ' + (data.error || 'Error cargando dashboard'), 'error');
         }
     } catch (error) {
         console.error('Error cargando dashboard:', error);
-        showNotification('❌ Error de conexión', 'error');
+        showNotification('❌ Error de conexión con el servidor', 'error');
     } finally {
         ocultarLoader();
     }

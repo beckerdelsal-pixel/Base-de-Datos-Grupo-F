@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
 const { initDatabase } = require('./config/database');
+const dashboardRoutes = require('./routes/dashboard');
+app.use('/api/dashboard', dashboardRoutes);
 
 // Importar rutas
 const authRoutes = require('./routes/auth');
