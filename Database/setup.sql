@@ -34,3 +34,4 @@ VALUES
 
 -- 5. Verificar que todo está ahí
 SELECT * FROM proyectos;
+

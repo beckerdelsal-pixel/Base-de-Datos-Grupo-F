@@ -176,6 +176,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const formLogin = document.getElementById('login-form');
     if (formLogin) formLogin.addEventListener('submit', iniciarSesion);
 
+    // 1.5 Manejo del Registro (ESTO ES LO QUE FALTA)
+    const formRegistro = document.getElementById('registro-form');
+    if (formRegistro) {
+        formRegistro.addEventListener('submit', registrarUsuario);
+        console.log("Escuchador de registro activado correctamente ✅");
+    }
+
     // 2. Manejo de Creación de Proyectos
     const formProyecto = document.getElementById('form-crear-proyecto');
     if (formProyecto) formProyecto.addEventListener('submit', crearProyecto);
@@ -192,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setTimeout(() => {
-    const loader = document.getElementById('loader-wrapper');
-    if (loader) loader.style.display = 'none';
-}, 5000);
+        const loader = document.getElementById('loader-wrapper');
+        if (loader) loader.style.display = 'none';
+    }, 3000); // Bajé a 3s para que no esperes tanto
 });
