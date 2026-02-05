@@ -169,6 +169,22 @@ app.post('/api/proyectos/invertir', async (req, res) => {
     }
 });
 
+app.get('/api/usuarios/:id/inversiones', async (req, res) => {
+    try {
+        const query = `
+            SELECT i.monto, i.fecha_inversion, p.nombre as proyecto_nombre 
+            FROM inversiones i 
+            JOIN proyectos p ON i.proyecto_id = p.id 
+            WHERE i.usuario_id = $1 
+            ORDER BY i.fecha_inversion DESC;
+        `;
+        const result = await pool.query(query, [req.params.id]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener historial' });
+    }
+});
+
 // Ruta de Salud y Redirección
 app.get('/health', (req, res) => res.status(200).send('OK'));
 

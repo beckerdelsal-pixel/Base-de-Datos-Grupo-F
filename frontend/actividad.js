@@ -144,10 +144,10 @@ async function invertir(proyectoId) {
         const response = await fetch(`${API_URL}/proyectos/invertir`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                userId, 
-                proyectoId, 
-                monto: parseFloat(monto) 
+            body: JSON.stringify({
+                userId,
+                proyectoId,
+                monto: parseFloat(monto)
             })
         });
 
@@ -202,18 +202,18 @@ async function actualizarVistaSaldo() {
 }
 
 // Carga las estadísticas rápidas (Cards superiores)
-    async function cargarEstadisticas() {
-        const userId = localStorage.getItem('userId');
-        const contenedor = document.getElementById('contenedor-estadisticas');
-        if (!contenedor) return;
+async function cargarEstadisticas() {
+    const userId = localStorage.getItem('userId');
+    const contenedor = document.getElementById('contenedor-estadisticas');
+    if (!contenedor) return;
 
-        try {
-            // En una app real, haríamos un fetch a un endpoint de stats
-            // Por ahora, simularemos los datos basados en el saldo y la info del usuario
-            const response = await fetch(`${API_URL}/usuarios/${userId}`);
-            const user = await response.json();
+    try {
+        // En una app real, haríamos un fetch a un endpoint de stats
+        // Por ahora, simularemos los datos basados en el saldo y la info del usuario
+        const response = await fetch(`${API_URL}/usuarios/${userId}`);
+        const user = await response.json();
 
-            contenedor.innerHTML = `
+        contenedor.innerHTML = `
             <div class="card-stat">
                 <h4>Total Invertido</h4>
                 <p class="monto-stat">$0.00</p>
@@ -227,29 +227,15 @@ async function actualizarVistaSaldo() {
                 <p class="monto-stat">$${user.saldo || '0.00'}</p>
             </div>
         `;
-        } catch (err) {
-            console.error("Error en stats:", err);
-        }
-    }
-
-    app.get('/api/usuarios/:id/inversiones', async (req, res) => {
-    try {
-        const query = `
-            SELECT i.monto, i.fecha_inversion, p.nombre as proyecto_nombre 
-            FROM inversiones i 
-            JOIN proyectos p ON i.proyecto_id = p.id 
-            WHERE i.usuario_id = $1 
-            ORDER BY i.fecha_inversion DESC;
-        `;
-        const result = await pool.query(query, [req.params.id]);
-        res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: 'Error al obtener historial' });
+        console.error("Error en stats:", err);
     }
-});
+}
 
-    // Carga la lista de inversiones realizadas por este usuario
-    async function cargarMisInversiones() {
+
+
+// Carga la lista de inversiones realizadas por este usuario
+async function cargarMisInversiones() {
     const userId = localStorage.getItem('userId');
     const contenedor = document.getElementById('contenedor-mis-inversiones');
     if (!contenedor || !userId) return;
@@ -264,7 +250,7 @@ async function actualizarVistaSaldo() {
         }
 
         let html = '<table class="tabla-inversiones"><thead><tr><th>Proyecto</th><th>Monto</th><th>Fecha</th></tr></thead><tbody>';
-        
+
         inversiones.forEach(inv => {
             const fecha = new Date(inv.fecha_inversion).toLocaleDateString();
             html += `
@@ -401,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cargarProyectos();
     }
 
-    
+
 
     // 4. Mostrar nombre de usuario si existe
     const userDisplay = document.querySelector('.user-name');
