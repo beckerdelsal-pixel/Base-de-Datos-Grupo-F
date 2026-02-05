@@ -1,40 +1,67 @@
 const express = require('express');
 const router = express.Router();
 const { body, validationResult, query } = require('express-validator');
+const jwt = require('jsonwebtoken'); // Asegúrate de tener instalado jsonwebtoken
 const Project = require('../models/Project');
 const Investment = require('../models/Investment');
 const User = require('../models/User');
 
-// Middleware para verificar autenticación
+// Configuración JWT - usa tu secret real
+const JWT_SECRET = process.env.JWT_SECRET || BJDSLCJGZ;
+
+// Middleware para verificar autenticación JWT
 const authenticate = async (req, res, next) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    const authHeader = req.header('Authorization');
     
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
-        error: 'Token no proporcionado'
+        error: 'Token no proporcionado o formato incorrecto. Use: Bearer <token>'
       });
     }
     
-    // NOTA: Necesitas implementar verifyToken en User o usar otro método
-    // Esto es temporal - ajusta según tu implementación real
-    const decoded = { 
-      id: 1, 
-      tipo_usuario: 'inversor' 
-    }; // Temporal - reemplaza con tu lógica real
+    const token = authHeader.replace('Bearer ', '');
     
-    if (!decoded) {
+    // Verificar token JWT
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Opcional: Verificar que el usuario aún exista en la base de datos
+    const user = await User.findById(decoded.id);
+    if (!user) {
       return res.status(401).json({
         success: false,
-        error: 'Token inválido o expirado'
+        error: 'Usuario no encontrado'
       });
     }
     
-    req.user = decoded;
+    // Agregar usuario al request
+    req.user = {
+      id: user.id,
+      tipo_usuario: user.tipo_usuario,
+      email: user.email,
+      nombre: user.nombre
+      // Agrega otros campos que necesites
+    };
+    
     next();
   } catch (error) {
-    console.error('Error de autenticación:', error);
+    console.error('Error de autenticación JWT:', error.message);
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        error: 'Token inválido'
+      });
+    }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        error: 'Token expirado'
+      });
+    }
+    
     res.status(500).json({
       success: false,
       error: 'Error de autenticación'
@@ -80,7 +107,6 @@ router.get('/', async (req, res) => {
 router.get('/search', async (req, res) => {
   try {
     const { q = '', limit = 20, offset = 0 } = req.query;
-    // NOTA: Tu función search actual no acepta categoría como parámetro separado
     const projects = await Project.search(
       q, 
       parseInt(limit), 
@@ -174,10 +200,10 @@ router.get('/:id', async (req, res) => {
       });
     }
     
-    // Incrementar contador de vistas (usando el método correcto)
+    // Incrementar contador de vistas
     await Project.incrementViews(project.id);
     
-    // Obtener estadísticas del proyecto (si existe el método)
+    // Obtener estadísticas del proyecto
     let projectStats = {};
     try {
       projectStats = await Project.getProjectStats(project.id) || {};
@@ -216,10 +242,10 @@ router.post('/', authenticate, [
     .custom(value => {
       const fechaLimite = new Date(value);
       const hoy = new Date();
-      hoy.setHours(0, 0, 0, 0); // Solo fecha, sin hora
+      hoy.setHours(0, 0, 0, 0);
       
       const maxDate = new Date();
-      maxDate.setMonth(hoy.getMonth() + 6); // Máximo 6 meses
+      maxDate.setMonth(hoy.getMonth() + 6);
       maxDate.setHours(23, 59, 59, 999);
       
       if (fechaLimite <= hoy) {
@@ -236,7 +262,7 @@ router.post('/', authenticate, [
     .withMessage('Categoría inválida')
 ], async (req, res) => {
   try {
-    // Verificar que el usuario sea emprendedor (temporal - ajusta según tu lógica)
+    // Verificar que el usuario sea emprendedor
     if (req.user.tipo_usuario !== 'emprendedor') {
       return res.status(403).json({
         success: false,
@@ -326,7 +352,6 @@ router.put('/:id', authenticate, async (req, res) => {
       }
     });
     
-    // Solo actualizar si hay campos válidos
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({
         success: false,
@@ -473,16 +498,13 @@ router.post('/:id/invest', authenticate, [
       nota: req.body.nota || ''
     };
     
-    // NOTA: Necesitas tener un modelo Investment con método create
-    // Esto es temporal - descomenta cuando tengas el modelo
+    // Si tienes modelo Investment, descomenta esto:
     /*
     const investment = await Investment.create(investmentData);
-    
-    // Actualizar fondos del proyecto
-    await Project.updateFunds(project.id, investmentData.monto);
+    const updatedProject = await Project.updateFunds(project.id, investmentData.monto);
     */
     
-    // TEMPORAL: Simular inversión hasta que tengas el modelo
+    // TEMPORAL: Simulación hasta que tengas el modelo Investment
     const investment = {
       id: Date.now(),
       ...investmentData,
@@ -490,7 +512,6 @@ router.post('/:id/invest', authenticate, [
       estado: 'completado'
     };
     
-    // Actualizar fondos del proyecto (simulado)
     const updatedProject = await Project.updateFunds(project.id, investmentData.monto);
     
     res.status(201).json({
@@ -513,14 +534,13 @@ router.post('/:id/invest', authenticate, [
 // OBTENER INVERSIONES DE UN PROYECTO
 router.get('/:id/investments', async (req, res) => {
   try {
-    // NOTA: Necesitas implementar getProjectStats o método similar
     const projectStats = await Project.getProjectStats(req.params.id) || {};
     
     res.json({
       success: true,
       data: {
         inversiones: projectStats.total_inversores || 0,
-        detalles: projectStats // Incluye otras estadísticas
+        detalles: projectStats
       }
     });
   } catch (error) {
