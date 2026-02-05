@@ -35,3 +35,18 @@ VALUES
 -- 5. Verificar que todo está ahí
 SELECT * FROM proyectos;
 
+SELECT * FROM usuarios;
+
+INSERT INTO usuarios (nombre, email, password, rol) 
+VALUES ('Usuario de Prueba', 'test@test.com', '123456', 'emprendedor');
+
+
+CREATE TABLE IF NOT EXISTS inversiones (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id),
+    proyecto_id INTEGER REFERENCES proyectos(id),
+    monto NUMERIC(12,2) NOT NULL,
+    fecha_inversion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+select * from inversiones;

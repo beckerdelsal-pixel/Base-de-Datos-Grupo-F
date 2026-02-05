@@ -34,7 +34,7 @@ async function registrarUsuario(e) {
 
     try {
         console.log("Enviando datos de registro:", { nombre, email, rol });
-        
+
         const response = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -87,9 +87,9 @@ async function iniciarSesion(e) {
             localStorage.setItem('token', data.token);
             localStorage.setItem('userName', data.user.nombre);
             localStorage.setItem('userId', data.user.id);
-            
+
             console.log("Login exitoso. Redirigiendo a:", data.user.rol);
-            
+
             // Redirección
             if (data.user.rol === 'inversionista') {
                 window.location.href = 'dashboard-inversionista.html';
@@ -138,24 +138,42 @@ async function invertir(proyectoId) {
     const monto = prompt("¿Cuánto deseas invertir en este proyecto?");
     const userId = localStorage.getItem('userId');
 
-    if (!monto || isNaN(monto)) return;
+    if (!monto || isNaN(monto) || parseFloat(monto) <= 0) return;
 
     try {
         const response = await fetch(`${API_URL}/proyectos/invertir`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, proyectoId, monto: parseFloat(monto) })
+            body: JSON.stringify({ 
+                userId, 
+                proyectoId, 
+                monto: parseFloat(monto) 
+            })
         });
 
         const data = await response.json();
+
         if (response.ok) {
+            // 1. Alert básico de éxito
             alert("¡Inversión realizada con éxito! 🎉");
-            location.reload();
+
+            // 2. VERIFICACIÓN DE META CUMPLIDA
+            // Obtenemos los datos actualizados del proyecto para verificar la meta
+            const resProyecto = await fetch(`${API_URL}/proyectos`);
+            const proyectos = await resProyecto.json();
+            const proyectoActualizado = proyectos.find(p => p.id === proyectoId);
+
+            if (proyectoActualizado && proyectoActualizado.actual >= proyectoActualizado.meta) {
+                alert(`¡HISTÓRICO! 🚀 El proyecto "${proyectoActualizado.nombre}" ha alcanzado el 100% de su meta gracias a tu aporte. ¡Felicidades!`);
+            }
+
+            location.reload(); // Recargar para actualizar saldos y tablas
         } else {
             alert("Error: " + data.error);
         }
     } catch (err) {
-        alert("Error de conexión");
+        console.error("Error en la inversión:", err);
+        alert("Error de conexión al realizar la inversión.");
     }
 }
 
@@ -180,6 +198,88 @@ async function actualizarVistaSaldo() {
         }
     } catch (err) {
         console.error("Error al obtener saldo:", err);
+    }
+}
+
+// Carga las estadísticas rápidas (Cards superiores)
+    async function cargarEstadisticas() {
+        const userId = localStorage.getItem('userId');
+        const contenedor = document.getElementById('contenedor-estadisticas');
+        if (!contenedor) return;
+
+        try {
+            // En una app real, haríamos un fetch a un endpoint de stats
+            // Por ahora, simularemos los datos basados en el saldo y la info del usuario
+            const response = await fetch(`${API_URL}/usuarios/${userId}`);
+            const user = await response.json();
+
+            contenedor.innerHTML = `
+            <div class="card-stat">
+                <h4>Total Invertido</h4>
+                <p class="monto-stat">$0.00</p>
+            </div>
+            <div class="card-stat">
+                <h4>Proyectos Apoyados</h4>
+                <p class="monto-stat">0</p>
+            </div>
+            <div class="card-stat">
+                <h4>Saldo en Cuenta</h4>
+                <p class="monto-stat">$${user.saldo || '0.00'}</p>
+            </div>
+        `;
+        } catch (err) {
+            console.error("Error en stats:", err);
+        }
+    }
+
+    app.get('/api/usuarios/:id/inversiones', async (req, res) => {
+    try {
+        const query = `
+            SELECT i.monto, i.fecha_inversion, p.nombre as proyecto_nombre 
+            FROM inversiones i 
+            JOIN proyectos p ON i.proyecto_id = p.id 
+            WHERE i.usuario_id = $1 
+            ORDER BY i.fecha_inversion DESC;
+        `;
+        const result = await pool.query(query, [req.params.id]);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Error al obtener historial' });
+    }
+});
+
+    // Carga la lista de inversiones realizadas por este usuario
+    async function cargarMisInversiones() {
+    const userId = localStorage.getItem('userId');
+    const contenedor = document.getElementById('contenedor-mis-inversiones');
+    if (!contenedor || !userId) return;
+
+    try {
+        const response = await fetch(`${API_URL}/usuarios/${userId}/inversiones`);
+        const inversiones = await response.json();
+
+        if (inversiones.length === 0) {
+            contenedor.innerHTML = '<p>Aún no has realizado ninguna inversión.</p>';
+            return;
+        }
+
+        let html = '<table class="tabla-inversiones"><thead><tr><th>Proyecto</th><th>Monto</th><th>Fecha</th></tr></thead><tbody>';
+        
+        inversiones.forEach(inv => {
+            const fecha = new Date(inv.fecha_inversion).toLocaleDateString();
+            html += `
+                <tr>
+                    <td><strong>${inv.proyecto_nombre}</strong></td>
+                    <td>$${inv.monto}</td>
+                    <td>${fecha}</td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table>';
+        contenedor.innerHTML = html;
+    } catch (err) {
+        console.error("Error al cargar historial:", err);
     }
 }
 
@@ -216,39 +316,66 @@ async function crearProyecto(e) {
 // Cargar y mostrar proyectos en el Dashboard
 // MEJORA EN CARGAR PROYECTOS (Vista Inversionista vs Emprendedor)
 async function cargarProyectos() {
-    const contenedor = document.getElementById('contenedor-proyectos');
+    // Ajustado al ID de tu HTML: 'proyectos-recomendados-container'
+    const contenedor = document.getElementById('proyectos-recomendados-container');
     if (!contenedor) return;
 
     try {
+        console.log("Cargando proyectos desde el servidor...");
         const response = await fetch(`${API_URL}/proyectos`);
         const proyectos = await response.json();
-        
-        contenedor.innerHTML = ''; 
+
+        contenedor.innerHTML = '';
 
         if (proyectos.length === 0) {
-            contenedor.innerHTML = '<p>No hay proyectos activos en este momento.</p>';
+            contenedor.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #666;">
+                    <p>No hay proyectos activos en este momento. ¡Vuelve más tarde!</p>
+                </div>`;
             return;
         }
 
         proyectos.forEach(p => {
+            // Cálculo del porcentaje para la barra de progreso
             const porcentaje = Math.min((p.actual / p.meta) * 100, 100).toFixed(1);
-            // Si el usuario es inversionista, le mostramos un botón de "Invertir"
+
+            // Detectamos si estamos en el dashboard del inversionista para mostrar el botón
             const esInversionista = window.location.href.includes('dashboard-inversionista');
-            
+
+            // Inyectamos el HTML con las clases de tu estilos.css
             contenedor.innerHTML += `
-                <div class="card-proyecto">
-                    <h3>${p.nombre}</h3>
-                    <p>${p.descripcion}</p>
-                    <div class="progreso-bar">
-                        <div class="progreso-fill" style="width: ${porcentaje}%"></div>
+                <div class="tarjeta-proyecto-dash">
+                    <div class="proyecto-info">
+                        <span class="tag-categoria">${p.categoria || 'Innovación'}</span>
+                        <h4>${p.nombre}</h4>
+                        <p>${p.descripcion.length > 120 ? p.descripcion.substring(0, 120) + '...' : p.descripcion}</p>
                     </div>
-                    <p>Meta: $${p.meta} | Recaudado: $${p.actual}</p>
-                    ${esInversionista ? `<button onclick="invertir(${p.id})" class="btn-invertir">Invertir</button>` : ''}
+                    
+                    <div class="proyecto-stats">
+                        <div class="barra-progreso-bg">
+                            <div class="barra-progreso-fill" style="width: ${porcentaje}%"></div>
+                        </div>
+                        <div class="stats-numeros">
+                            <span><strong>${porcentaje}%</strong> financiado</span>
+                            <span>Meta: <strong>$${p.meta}</strong></span>
+                        </div>
+                        <p style="font-size: 0.85rem; color: #555; margin-top: 5px;">
+                            Recaudado: $${p.actual}
+                        </p>
+                    </div>
+
+                    ${esInversionista ?
+                    `<button onclick="invertir(${p.id})" class="boton-invertir-mini" style="width: 100%; margin-top: 15px;">
+                            💰 Invertir ahora
+                        </button>`
+                    : ''
+                }
                 </div>
             `;
         });
     } catch (err) {
         console.error("Error cargando proyectos:", err);
+        contenedor.innerHTML = '<p style="text-align:center; color:red;">Error al conectar con el servidor.</p>';
     }
 }
 
@@ -274,6 +401,8 @@ document.addEventListener('DOMContentLoaded', () => {
         cargarProyectos();
     }
 
+    
+
     // 4. Mostrar nombre de usuario si existe
     const userDisplay = document.querySelector('.user-name');
     if (userDisplay && localStorage.getItem('userName')) {
@@ -287,5 +416,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (document.getElementById('display-saldo')) {
         actualizarVistaSaldo();
+    }
+    if (document.getElementById('proyectos-recomendados-container')) {
+        cargarProyectos();
+    }
+    if (document.getElementById('contenedor-estadisticas')) {
+        cargarEstadisticas();
+        cargarMisInversiones();
     }
 });

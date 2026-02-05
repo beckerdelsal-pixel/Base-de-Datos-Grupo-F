@@ -142,15 +142,22 @@ app.post('/api/proyectos/invertir', async (req, res) => {
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        // Restar saldo (solo si tiene suficiente)
+
+        // 1. Restar saldo al inversionista
         const resUser = await client.query(
             'UPDATE usuarios SET saldo = saldo - $1 WHERE id = $2 AND saldo >= $1 RETURNING saldo',
             [monto, userId]
         );
         if (resUser.rows.length === 0) throw new Error('Saldo insuficiente');
 
-        // Sumar al proyecto
+        // 2. Sumar al proyecto
         await client.query('UPDATE proyectos SET actual = actual + $1 WHERE id = $2', [monto, proyectoId]);
+
+        // 3. REGISTRAR EL MOVIMIENTO EN LA NUEVA TABLA
+        await client.query(
+            'INSERT INTO inversiones (usuario_id, proyecto_id, monto) VALUES ($1, $2, $3)',
+            [userId, proyectoId, monto]
+        );
 
         await client.query('COMMIT');
         res.json({ mensaje: 'Inversión exitosa', nuevoSaldo: resUser.rows[0].saldo });
